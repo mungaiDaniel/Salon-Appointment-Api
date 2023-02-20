@@ -1,7 +1,9 @@
-from app.user import Users, user_schema, users_schema
+from app.user import Users, user_schema, users_schema, MyUsers
 from flask import request, jsonify, make_response
 from app import app, db
-import json
+from datetime import datetime, timedelta
+from werkzeug.security import check_password_hash, generate_password_hash
+from flask_jwt_extended import get_jwt_identity, create_access_token
 
 
 
@@ -9,14 +11,14 @@ import json
 def add_user():
     data = request.get_json()
     
-    FirstName = data['FirstName']
-    LastName = data['LastName']
-    Email = data['Email']
-    Password = data['Password']
-    PhoneNumber = data['PhoneNumber']
-    Location = data['Location']
+    firstName = data['firstName']
+    lastName = data['lastName']
+    email = data['email']
+    password = generate_password_hash(data['password']) 
+    phoneNumber = data['phoneNumber']
+    location = data['location']
     
-    user = Users(FirstName=FirstName, LastName=LastName, Email=Email, Password=Password, PhoneNumber=PhoneNumber, Location=Location)
+    user = Users(firstName=firstName, lastName=lastName, email=email, password=password, phoneNumber=phoneNumber, location=location)
     
     
     db.session.add(user)
@@ -41,3 +43,35 @@ def get_all():
         "status": 200,
         "data": results
     }), 200)
+    
+@app.route('/login', methods=['POST'])
+def login():
+    auth = request.form
+    if not auth or not auth.get('email') or not auth.get('password'):
+        return make_response(
+            'Could not verify',
+            401,
+            {'WWW-Authenticate' : 'Basic realm ="Login required !!"'}
+        )
+    current_user = Users.query.filter_by(email = auth.get('email')).first()
+    
+    if not current_user:
+        return make_response(
+            'Could not verify',
+            401,
+            {'WWW-Authenticate' : 'Basic realm ="User does not exist !!"'}
+        )
+   
+    if check_password_hash(current_user.password, auth.get('password')):
+        token = MyUsers.create_token()
+        
+        return make_response(jsonify({
+            'token': token
+        }), 201)
+    return make_response(
+        'could not verify',
+        403,
+        {'WWW-Authenticate' : 'Basic realm ="Wrong password !!"'}
+    )
+    
+    
