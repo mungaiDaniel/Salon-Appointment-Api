@@ -41,18 +41,19 @@ class Users(db.Model):
     
     def generate_auth_token(self, permission_level):
         
+        
         if permission_level == 2:
             
-            token = create_access_token(identity={'email': self.email}, additional_claims= {'admin': 2})
+            token = create_access_token(identity=self.email, additional_claims= {'admin': 2})
             
             return token
         elif permission_level == 1:
             
-            token = create_access_token(identity={'email': self.email}, additional_claims= {'admin': 1})
+            token = create_access_token(identity= self.email, additional_claims= {'admin': 1})
             
             return token
         
-        return create_access_token(identity={'email': self.email}, additional_claims= {'admin': 0})
+        return create_access_token(identity=self.email, additional_claims= {'admin': 0})
         
     @staticmethod
     def generate_password_hash(password):

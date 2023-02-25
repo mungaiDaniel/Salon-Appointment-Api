@@ -1,11 +1,12 @@
-from app.database.model import Users, user_schema, users_schema
+from app.database.model import Users, user_schema, users_schema, service_schema,services_schemas, Services
 from flask import request, make_response, jsonify
 from app import app, db
 import logging
+import json
 import app.utils.responses as resp
 from app.utils.responses import m_return 
 from app.utils.decorators import permission
-from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
+from flask_jwt_extended import create_access_token, create_refresh_token ,jwt_required, get_jwt_identity,decode_token
 
 
 @app.after_request
@@ -123,11 +124,11 @@ def login():
         return m_return(http_code=resp.PERMISSION_DENIED['http_code'], message=resp.PERMISSION_DENIED['message'],
                         code=resp.PERMISSION_DENIED['code'])
         
-    
+    refresh_token = create_refresh_token(identity={'email': email})
     
     return m_return(http_code=resp.SUCCESS['http_code'],
                     message=resp.SUCCESS['message'],
-                    value={'access_token': access_token})
+                    value={'access_token': access_token, 'refresh_token': refresh_token})
     
 @app.route('/admin/<int:id>', methods=['PUT'])
 def superAdmin(id):
