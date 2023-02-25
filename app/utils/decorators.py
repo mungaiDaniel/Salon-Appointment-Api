@@ -1,8 +1,7 @@
 import functools
 import logging
-
+from flask_jwt_extended import verify_jwt_in_request, get_jwt
 import app.utils.responses as error
-from app.utils.auth import jwt
 from flask import request
 
 def permission(arg):
@@ -15,11 +14,11 @@ def permission(arg):
             
             if auth is None and 'Authorization' in request.headers:
                 try:
-                    auth_type, token = request.headers['Authorization'].split(None, 1)
                     
-                    data = jwt.loads(token)
+                    verify_jwt_in_request()
+                    claims = get_jwt()
                     
-                    if data['admin'] < arg:
+                    if claims['admin'] < arg:
                         
                         return error.NOT_ADMIN
                 except ValueError:

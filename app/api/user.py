@@ -1,17 +1,11 @@
-from app.auth.model import Users, user_schema, users_schema
-from flask import request, jsonify, make_response
+from app.database.model import Users, user_schema, users_schema
+from flask import request, make_response, jsonify
 from app import app, db
 import logging
 import app.utils.responses as resp
-from app.utils.auth import auth, refresh_jwt
 from app.utils.responses import m_return 
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
-from passlib.handlers.md5_crypt import md5_crypt
 from app.utils.decorators import permission
-from datetime import datetime, timedelta
-from werkzeug.security import check_password_hash, generate_password_hash
-from flask_jwt_extended import get_jwt_identity, create_access_token
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 
 
 @app.after_request
@@ -58,7 +52,16 @@ def add_user():
 def get_one(id):
     my_user = Users.query.get_or_404(id)
     
-    return user_schema.dump(my_user), 200
+    if my_user:
+        
+        return user_schema.dump(my_user), 200
+    
+    return make_response(jsonify({
+        "status": 404,
+        "data": "No user was found by that id"
+    }), 404)
+    
+    
 
 @app.route('/users', methods=['GET'])
 def get_all():
@@ -120,8 +123,26 @@ def login():
         return m_return(http_code=resp.PERMISSION_DENIED['http_code'], message=resp.PERMISSION_DENIED['message'],
                         code=resp.PERMISSION_DENIED['code'])
         
-    ref_token = refresh_jwt.dumps({'email': email})
+    
     
     return m_return(http_code=resp.SUCCESS['http_code'],
                     message=resp.SUCCESS['message'],
-                    value={'access_token': access_token, 'refresh_token': ref_token})
+                    value={'access_token': access_token})
+    
+@app.route('/admin/<int:id>', methods=['PUT'])
+def superAdmin(id):
+    
+    admin = Users.query.get_or_404(id)
+    
+    data = request.get_json()
+    
+    user_role = data['user_role']
+    
+    if user_role == 'super_admin' or user_role == 'admin' :
+        
+        admin.user_role = user_role
+    
+        
+    db.session.commit()
+    
+    return user_schema.jsonify(admin), 200
