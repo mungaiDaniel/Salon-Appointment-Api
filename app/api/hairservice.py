@@ -21,7 +21,6 @@ def add_style():
         
     data = request.get_json()
     email = get_jwt_identity()
-    email = email['email']
     user_id= Users.query.filter_by(email=email).first()
     
     
@@ -89,4 +88,23 @@ def update_style(id):
 
 
     
+@app.route('/stylings/<int:id>', methods=['DELETE'])
+@permission(2)
+def delete_style(id):
+     
+    my_style = Services.query.get_or_404(id)
+     
+    if not my_style:
+         
+        return make_response(jsonify({
+        "status": 404,
+        "error": "No style found with that id"
+     }), 404)
+     
+    db.session.delete(my_style)
+    db.session.commit()
+     
+    return jsonify({'message': 'deleted successfully'})
+ 
+     
     

@@ -1,5 +1,5 @@
 from app import db, ma
-import datetime
+from datetime import datetime
 from enum import Enum
 from passlib.handlers.md5_crypt import md5_crypt
 from flask_jwt_extended import create_access_token
@@ -23,7 +23,7 @@ class Users(db.Model):
     phoneNumber = db.Column(db.Integer)
     location = db.Column(db.String(100))
     user_role = db.Column(db.Enum(Admin , name='user_roles'), default='user')
-    created = db.Column(db.DateTime, default=datetime.datetime.now)
+    created = db.Column(db.DateTime, default=datetime.now())
     
     
     def __init__(self, firstName, lastName, email, password, phoneNumber, location, user_role='user'):
@@ -96,9 +96,9 @@ class Serviceschema(ma.Schema):
 service_schema = Serviceschema()
 services_schemas = Serviceschema(many=True)
 
-class Employees(db.Model):
+class UserServices(db.Model):
     
-    __tablename__ = 'employees'
+    __tablename__ = 'userservices'
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     service_id = db.Column(db.Integer, db.ForeignKey('services.id'))
@@ -117,8 +117,9 @@ employees_schemas = Employeeschema(many=True)
 class Bookings(db.Model):
     __tablename__ = 'bookings'
     id = db.Column(db.Integer, primary_key=True)
-    time = db.Column(db.DateTime)
-    employee_id = db.Column(db.Integer, db.ForeignKey('employees.id'))
+    time = db.Column(db.DateTime,
+        default=datetime.utcnow())
+    employee_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     service_id = db.Column(db.Integer, db.ForeignKey('services.id'))
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     
@@ -134,6 +135,7 @@ class Bookingschema(ma.Schema):
         
 booking_schema = Bookingschema()
 bookings_schemas = Bookingschema(many=True)
+
 
         
         

@@ -147,3 +147,15 @@ def superAdmin(id):
     db.session.commit()
     
     return user_schema.jsonify(admin), 200
+
+@app.route('/employees', methods=['GET'])
+def Admin():
+    
+    user_role = 'admin'
+    
+    employe = Users.query.filter_by(user_role=user_role).all()
+    
+    
+    results = users_schema.dump(employe)
+    
+    return  {'data': results}, 200
