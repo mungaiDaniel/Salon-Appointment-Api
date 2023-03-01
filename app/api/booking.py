@@ -12,10 +12,6 @@ from flask_jwt_extended import create_access_token, create_refresh_token ,jwt_re
 @app.route('/employee_service/<int:employee_id>', methods=['GET'])
 def get_userservices(employee_id):
 
-
-    # email = get_jwt_identity()
-
-
     employ_services = Services.query \
         .join(UserServices, Services.id
               == UserServices.service_id) \
@@ -24,11 +20,9 @@ def get_userservices(employee_id):
     
     result = db.session.execute(employ_services)
     names = [row[0] for row in result]
-    print(":::::::::::::::::::::::>>>",names)
     
     res = services_schemas.jsonify(names)
     
-    print('<><><><><><><><.', res)
     
     return res
 
