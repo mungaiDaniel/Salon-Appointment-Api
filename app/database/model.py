@@ -1,8 +1,9 @@
-from app import db, ma
+from app import db, ma, app
 from datetime import datetime
 from enum import Enum
 from passlib.handlers.md5_crypt import md5_crypt
 from flask_jwt_extended import create_access_token
+
 
 class Admin(str, Enum):
     super_admin = 'super_admin'
@@ -39,6 +40,16 @@ class Users(db.Model):
         return {'id': self.id, 'firstName': self.firstName, 'email': self.email,
                 'created': self.created.__format__('%Y-%m-%d'), 'user_role': self.user_role}
     
+    @staticmethod
+    def create(firstName, lastName, email, password, phoneNumber, location, user_role='user'):
+        user = Users(firstName=firstName, lastName=lastName, email=email,password=password, phoneNumber=phoneNumber, location=location,user_role=user_role)
+        
+        db.session.add(user)
+        db.session.commit()
+        
+        return user
+        
+        
     def generate_auth_token(self, permission_level):
         
         
@@ -58,7 +69,7 @@ class Users(db.Model):
     @staticmethod
     def generate_password_hash(password):
 
-        h = md5_crypt.encrypt(password)
+        h = md5_crypt.hash(password)
 
         return h
     

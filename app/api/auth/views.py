@@ -1,18 +1,13 @@
-from app.database.model import Users, user_schema, users_schema, service_schema,services_schemas, Services
-from flask import request, make_response, jsonify
-from app import app, db
+from app.database.model import Users, user_schema
+from flask import request
+from app import app
 import logging
-import json
+from app.api.auth.model import UserModel
 import app.utils.responses as resp
 from app.utils.responses import m_return 
 from app.utils.decorators import permission
 from flask_jwt_extended import create_access_token, create_refresh_token ,jwt_required, get_jwt_identity,decode_token
 
-
-@app.after_request
-def add_header(response):
-    response.headers['Access-Control-Allow-Origin'] = '*'
-    return response
 
 @app.route('/users', methods=['POST'])
 def add_user():
@@ -33,17 +28,13 @@ def add_user():
         return m_return(http_code=resp.MISSED_PARAMETERS['http_code'], message=resp.MISSED_PARAMETERS['message'],
                         code=resp.MISSED_PARAMETERS['code'])
     
+    if email:
+        return {'message': 'email already in use'}
     
+    user = UserModel.create(firstName=firstName, lastName=lastName, email=email, password=password, phoneNumber=phoneNumber, location=location, user_role='user')
     
-    user = Users(firstName=firstName, lastName=lastName, email=email, password=password, phoneNumber=phoneNumber, location=location, user_role='user')
-    
-    db.session.add(user)
-
-    db.session.commit()
     
     if user is None:
-
-        # Return already exists error.
         return m_return(http_code=resp.ALREADY_EXIST['http_code'], message=resp.ALREADY_EXIST['message'],
                         code=resp.ALREADY_EXIST['code'])
     
@@ -51,27 +42,24 @@ def add_user():
 
 @app.route('/users/<int:id>', methods=['GET'])
 def get_one(id):
-    my_user = Users.query.get_or_404(id)
     
-    if my_user:
+    result = UserModel.get_one(id)
+    
+    if not result:
+        return m_return(http_code=resp.USER_DOES_NOT_EXIST['http_code'],
+                    message=resp.USER_DOES_NOT_EXIST['message'],
+                    code=resp.USER_DOES_NOT_EXIST['code'])
+    
+    return result
         
-        return user_schema.dump(my_user), 200
-    
-    return make_response(jsonify({
-        "status": 404,
-        "data": "No user was found by that id"
-    }), 404)
-    
     
 
 @app.route('/users', methods=['GET'])
 def get_all():
     
-    my_users = Users.query.all()
+    results = UserModel.get_all()
     
-    results = users_schema.dump(my_users)
-    
-    return  {'data': results}, 200
+    return   results, 200
    
     
 @app.route('/login', methods=['POST'])
@@ -133,29 +121,19 @@ def login():
 @app.route('/admin/<int:id>', methods=['PUT'])
 def superAdmin(id):
     
-    admin = Users.query.get_or_404(id)
     
     data = request.get_json()
     
     user_role = data['user_role']
     
-    if user_role == 'super_admin' or user_role == 'admin' :
-        
-        admin.user_role = user_role
+    admin = UserModel.promote_user(id, user_role=user_role)
     
-        
-    db.session.commit()
-    
-    return user_schema.jsonify(admin), 200
+    return admin
 
 @app.route('/employees', methods=['GET'])
 def Admin():
     
-    user_role = 'admin'
     
-    employe = Users.query.filter_by(user_role=user_role).all()
+    results = UserModel.get_admin()
     
-    
-    results = users_schema.dump(employe)
-    
-    return  {'data': results}, 200
+    return results
