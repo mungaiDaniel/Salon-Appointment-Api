@@ -1,8 +1,9 @@
-from app import db, ma
-import datetime
+from app import db, ma, app
+from datetime import datetime
 from enum import Enum
 from passlib.handlers.md5_crypt import md5_crypt
 from flask_jwt_extended import create_access_token
+
 
 class Admin(str, Enum):
     super_admin = 'super_admin'
@@ -23,7 +24,7 @@ class Users(db.Model):
     phoneNumber = db.Column(db.Integer)
     location = db.Column(db.String(100))
     user_role = db.Column(db.Enum(Admin , name='user_roles'), default='user')
-    created = db.Column(db.DateTime, default=datetime.datetime.now)
+    created = db.Column(db.DateTime, default=datetime.now())
     
     
     def __init__(self, firstName, lastName, email, password, phoneNumber, location, user_role='user'):
@@ -39,25 +40,36 @@ class Users(db.Model):
         return {'id': self.id, 'firstName': self.firstName, 'email': self.email,
                 'created': self.created.__format__('%Y-%m-%d'), 'user_role': self.user_role}
     
+    @staticmethod
+    def create(firstName, lastName, email, password, phoneNumber, location, user_role='user'):
+        user = Users(firstName=firstName, lastName=lastName, email=email,password=password, phoneNumber=phoneNumber, location=location,user_role=user_role)
+        
+        db.session.add(user)
+        db.session.commit()
+        
+        return user
+        
+        
     def generate_auth_token(self, permission_level):
+        
         
         if permission_level == 2:
             
-            token = create_access_token(identity={'email': self.email}, additional_claims= {'admin': 2})
+            token = create_access_token(identity=self.email, additional_claims= {'admin': 2})
             
             return token
         elif permission_level == 1:
             
-            token = create_access_token(identity={'email': self.email}, additional_claims= {'admin': 1})
+            token = create_access_token(identity= self.email, additional_claims= {'admin': 1})
             
             return token
         
-        return create_access_token(identity={'email': self.email}, additional_claims= {'admin': 0})
+        return create_access_token(identity=self.email, additional_claims= {'admin': 0})
         
     @staticmethod
     def generate_password_hash(password):
 
-        h = md5_crypt.encrypt(password)
+        h = md5_crypt.hash(password)
 
         return h
     
@@ -95,9 +107,9 @@ class Serviceschema(ma.Schema):
 service_schema = Serviceschema()
 services_schemas = Serviceschema(many=True)
 
-class Employees(db.Model):
+class UserServices(db.Model):
     
-    __tablename__ = 'employees'
+    __tablename__ = 'userservices'
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     service_id = db.Column(db.Integer, db.ForeignKey('services.id'))
@@ -116,8 +128,9 @@ employees_schemas = Employeeschema(many=True)
 class Bookings(db.Model):
     __tablename__ = 'bookings'
     id = db.Column(db.Integer, primary_key=True)
-    time = db.Column(db.DateTime)
-    employee_id = db.Column(db.Integer, db.ForeignKey('employees.id'))
+    time = db.Column(db.DateTime,
+        default=datetime.utcnow())
+    employee_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     service_id = db.Column(db.Integer, db.ForeignKey('services.id'))
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     
@@ -133,6 +146,7 @@ class Bookingschema(ma.Schema):
         
 booking_schema = Bookingschema()
 bookings_schemas = Bookingschema(many=True)
+
 
         
         
