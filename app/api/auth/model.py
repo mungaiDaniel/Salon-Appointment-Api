@@ -16,14 +16,6 @@ class UserModel:
         
         return user
     
-    @staticmethod
-    def get_all():
-        users = Users.query.all()
-        
-        result = users_schema.jsonify(users)
-        
-        return result
-    
     @classmethod
     def get_one(cls, id):
         
@@ -40,11 +32,8 @@ class UserModel:
     
     @staticmethod
     def get_admin():
-        
         user_role = 'admin'
-    
-        employe = Users.query.filter_by(user_role=user_role).all()
-        
+        employe = Users.query.filter_by(user_role=user_role).all() 
         result = users_schema.jsonify(employe)
         
         return result

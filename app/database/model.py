@@ -35,20 +35,6 @@ class Users(db.Model):
         self.phoneNumber = phoneNumber
         self.location = location
         self.user_role = user_role
-
-    def as_dict(self):
-        return {'id': self.id, 'firstName': self.firstName, 'email': self.email,
-                'created': self.created.__format__('%Y-%m-%d'), 'user_role': self.user_role}
-    
-    @staticmethod
-    def create(firstName, lastName, email, password, phoneNumber, location, user_role='user'):
-        user = Users(firstName=firstName, lastName=lastName, email=email,password=password, phoneNumber=phoneNumber, location=location,user_role=user_role)
-        
-        db.session.add(user)
-        db.session.commit()
-        
-        return user
-        
         
     def generate_auth_token(self, permission_level):
         

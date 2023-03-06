@@ -1,8 +1,9 @@
-from app.database.model import Users, user_schema
+from app.database.model import Users, user_schema, users_schema
 from flask import request
 from app import app
 import logging
 from app.api.auth.model import UserModel
+from app.contact.services import Query
 import app.utils.responses as resp
 from app.utils.responses import m_return 
 from app.utils.decorators import permission
@@ -28,9 +29,6 @@ def add_user():
         return m_return(http_code=resp.MISSED_PARAMETERS['http_code'], message=resp.MISSED_PARAMETERS['message'],
                         code=resp.MISSED_PARAMETERS['code'])
     
-    if email:
-        return {'message': 'email already in use'}
-    
     user = UserModel.create(firstName=firstName, lastName=lastName, email=email, password=password, phoneNumber=phoneNumber, location=location, user_role='user')
     
     
@@ -43,23 +41,18 @@ def add_user():
 @app.route('/users/<int:id>', methods=['GET'])
 def get_one(id):
     
-    result = UserModel.get_one(id)
+    result = Query.get_one(id, Users)
     
-    if not result:
-        return m_return(http_code=resp.USER_DOES_NOT_EXIST['http_code'],
-                    message=resp.USER_DOES_NOT_EXIST['message'],
-                    code=resp.USER_DOES_NOT_EXIST['code'])
-    
-    return result
+    return user_schema.jsonify(result)
         
     
 
 @app.route('/users', methods=['GET'])
 def get_all():
     
-    results = UserModel.get_all()
+    results = Query.get_all(Users)
     
-    return   results, 200
+    return users_schema.jsonify(results)
    
     
 @app.route('/login', methods=['POST'])

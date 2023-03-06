@@ -15,9 +15,8 @@ class DevelopmentConfig(Config):
         
 class TestingConfig(Config):
         
-        DEBUG = True
         TESTING = True
-        SQLALCHEMY_DATABASE_URI = postgre_local_base + '_test'
+        SQLALCHEMY_DATABASE_URI = "postgresql://postgres:username@localhost:5432/salon_test"
         
 class ProductionConfig(Config):
         

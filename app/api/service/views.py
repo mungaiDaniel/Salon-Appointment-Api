@@ -2,16 +2,14 @@ from app.database.model import Users, user_schema, users_schema, service_schema,
 from flask import request, make_response, jsonify
 from app import app, db
 import logging
+from app.contact.services import Query
+from app.api.service.model import ServiceModel
 import json
 import app.utils.responses as resp
 from app.utils.responses import m_return 
 from app.utils.decorators import permission
-from flask_jwt_extended import create_access_token, create_refresh_token ,jwt_required, get_jwt_identity,decode_token
+from flask_jwt_extended import jwt_required, get_jwt_identity
 
-@app.after_request
-def add_header(response):
-    response.headers['Access-Control-Allow-Origin'] = '*'
-    return response
 
 
 @app.route('/stylings', methods=['POST'])
@@ -40,35 +38,27 @@ def add_style():
         return m_return(http_code=resp.MISSED_PARAMETERS['http_code'], message=resp.MISSED_PARAMETERS['message'],
                         code=resp.MISSED_PARAMETERS['code'])
       
-    service = Services(style=style, description=description, cost=cost, duration=duration, user_id=user_id.id)
-    
-    
-    db.session.add(service)
-    db.session.commit()
-    
+    service = ServiceModel.create_service(style=style, description=description, cost=cost, duration=duration, user_id=user_id.id)
     
     return service_schema.jsonify(service), 201
 
 @app.route('/stylings', methods=['GET'])
 def get_styles():
     
-    my_styles = Services.query.all()
+    my_styles = Query.get_all(Services)
     
     return services_schemas.jsonify(my_styles)
 
 @app.route('/stylings/<int:id>', methods=['GET'])
 def one_styles(id):
     
-    my_style = Services.query.get_or_404(id)
+    my_style = Query.get_one(id, Services)
     
-    return service_schema.jsonify(my_style)
+    return my_style
 
 @app.route('/stylings/<int:id>', methods=['PUT'])
 @permission(2)
 def update_style(id):
-    
-    
-    my_style = Services.query.get_or_404(id)
     
     data = request.get_json()
     
@@ -77,12 +67,7 @@ def update_style(id):
     cost = data['cost']
     duration = data['duration']
     
-    my_style.style = style
-    my_style.description = description
-    my_style.cost = cost
-    my_style.duration = duration
-    
-    db.session.commit()
+    my_style = ServiceModel.update(id, style=style, description=description, cost=cost, duration=duration)
     
     return service_schema.jsonify(my_style), 200
 
@@ -92,19 +77,20 @@ def update_style(id):
 @permission(2)
 def delete_style(id):
      
-    my_style = Services.query.get_or_404(id)
+    service = Services.query.filter_by(id=id).first()
+        
+    if not service:
+        return m_return(http_code=resp.NOT_FOUND_404['http_code'],
+                    message=resp.NOT_FOUND_404['message'],
+                    code=resp.NOT_FOUND_404['code'])
      
-    if not my_style:
-         
-        return make_response(jsonify({
-        "status": 404,
-        "error": "No style found with that id"
-     }), 404)
-     
-    db.session.delete(my_style)
-    db.session.commit()
-     
-    return jsonify({'message': 'deleted successfully'})
+    ServiceModel.delete(service)
+    
+    return m_return(http_code=resp.DELETED_SUCCESS['http_code'],
+                    message=resp.DELETED_SUCCESS['message'],
+                    code=resp.DELETED_SUCCESS['code'])
+        
+
  
      
     
