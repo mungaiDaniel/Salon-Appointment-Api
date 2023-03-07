@@ -1,4 +1,4 @@
-from app.database.model import Users, UserServices, Bookings, booking_schema, bookings_schemas ,user_schema, users_schema, service_schema,services_schemas, Services
+from app.database.model import  UserServices, Bookings, booking_schema, bookings_schemas ,user_schema, users_schema, service_schema,services_schemas, Services
 from flask import request, make_response, jsonify
 from app import app, db
 import logging

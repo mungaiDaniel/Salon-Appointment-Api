@@ -1,9 +1,10 @@
-from app.database.model import Users, user_schema, users_schema, service_schema,services_schemas, Services
+from app.database.model import user_schema, users_schema, service_schema,services_schemas, Services
 from flask import request, make_response, jsonify
 from app import app, db
 import logging
-from app.contact.services import Query
-from app.api.service.model import ServiceModel
+from app.auth.model import User
+from app.utils.services import Query
+from app.service.model import ServiceModel
 import json
 import app.utils.responses as resp
 from app.utils.responses import m_return 
@@ -19,7 +20,7 @@ def add_style():
         
     data = request.get_json()
     email = get_jwt_identity()
-    user_id= Users.query.filter_by(email=email).first()
+    user_id= User.query.filter_by(email=email).first()
     
     
     try:

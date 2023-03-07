@@ -1,7 +1,7 @@
 import os
 
 basedir = os.path.abspath(os.path.dirname(__file__))
-postgre_local_base = "postgresql://postgres:username@localhost:5432/salon_api"
+postgre_local_base = "postgresql://postgres:username@localhost:5432/Salon_api"
 
 class Config:
         SECRET_KEY = os.environ.get('SECRET_KEY') or 'you-will-never-guess'
