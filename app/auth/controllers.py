@@ -1,5 +1,5 @@
 from app.auth.model import User
-from app.database.model import user_schema
+from app.database.model import user_schema, users_schema
 from app import db
 
 
@@ -30,7 +30,7 @@ class UserController:
     def get_admin():
         user_role = 'admin'
         employe = User.query.filter_by(user_role=user_role).all()
-        result = user_schema.jsonify(employe)
+        result = users_schema.jsonify(employe)
 
         return result
 

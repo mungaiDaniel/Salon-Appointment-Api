@@ -28,11 +28,11 @@ def get_one(id):
     return user_schema.jsonify(result)
 
 
-# @app.route('/users', methods=['GET'])
-# def get_all():
-#     results = Query.get_all(Users)
-#
-#     return users_schema.jsonify(results)
+@app.route('/users', methods=['GET'])
+def get_all():
+    results = Query.get_all(User)
+
+    return users_schema.jsonify(results)
 
 
 @app.route('/login', methods=['POST'])
@@ -88,19 +88,19 @@ def login():
                     value={'access_token': access_token, 'refresh_token': refresh_token})
 
 
-# @app.route('/admin/<int:id>', methods=['PUT'])
-# def superAdmin(id):
-#     data = request.get_json()
+@app.route('/admin/<int:id>', methods=['PUT'])
+def superAdmin(id):
+    data = request.get_json()
 
-#     user_role = data['user_role']
+    user_role = data['user_role']
 
-#     admin = UserModel.promote_user(id, user_role=user_role)
+    admin = UserController.promote_user(id, user_role=user_role)
 
-#     return admin
+    return admin
 
 
-# @app.route('/employees', methods=['GET'])
-# def Admin():
-#     results = UserModel.get_admin()
+@app.route('/employees', methods=['GET'])
+def Admin():
+    results = UserController.get_admin()
 
-#     return results
+    return results

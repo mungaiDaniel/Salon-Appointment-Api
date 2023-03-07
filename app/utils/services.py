@@ -1,6 +1,7 @@
 from app import db
 from app.utils.responses import m_return
 import app.utils.responses as resp
+import logging
 
 
 class Query:
@@ -13,12 +14,18 @@ class Query:
     @classmethod
     def get_one(cls, id, session):
         
-        items = db.session.query(session).filter_by(id=id).first()
         
-        if not items:
+        
+        try:
+            
+            items = db.session.query(session).filter_by(id=id).first()
+        
+        except Exception as why:
+            
+            logging.info('No user found by that id' + str(why))
+        
             return m_return(http_code=resp.USER_DOES_NOT_EXIST['http_code'],
-                        message=resp.USER_DOES_NOT_EXIST['message'],
-                        code=resp.USER_DOES_NOT_EXIST['code'])
-        
+                    message=resp.USER_DOES_NOT_EXIST['message'],
+                    code=resp.USER_DOES_NOT_EXIST['code'])
         
         return items
