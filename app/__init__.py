@@ -22,10 +22,10 @@ app.app_context().push()
 
 
 
-from app.api.auth import views 
-from app.api.service import views
-from app.api.assistances import views
-from app.api.bookings import views
+from app.auth import views 
+from app.service import views
+from app.assistances import views
+from app.bookings import views
 
 if __name__ == '__main__':
     app.run(debug=True)
