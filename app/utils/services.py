@@ -11,14 +11,14 @@ class Query:
         return items
     
     @classmethod
-    def get_one(cls, id, table):
+    def get_one(cls, id, session):
         
-        service = db.session.query(table).filter_by(id=id).first()
+        items = db.session.query(session).filter_by(id=id).first()
         
-        if not service:
+        if not items:
             return m_return(http_code=resp.USER_DOES_NOT_EXIST['http_code'],
                         message=resp.USER_DOES_NOT_EXIST['message'],
                         code=resp.USER_DOES_NOT_EXIST['code'])
         
         
-        return service
+        return items
