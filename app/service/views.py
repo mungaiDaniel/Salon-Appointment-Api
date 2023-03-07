@@ -55,7 +55,7 @@ def one_styles(id):
     
     my_style = Query.get_one(id, Services)
     
-    return my_style
+    return service_schema.jsonify(my_style)
 
 @app.route('/stylings/<int:id>', methods=['PUT'])
 @permission(2)
