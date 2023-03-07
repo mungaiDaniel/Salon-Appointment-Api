@@ -53,7 +53,7 @@ class ServiceController:
         
         current_style = Services.query.filter_by(id=id).first()
         
-        if current_style is None:
+        if not current_style:
             return {'message': 'no style found by that id'}
         
         current_style.style = style
