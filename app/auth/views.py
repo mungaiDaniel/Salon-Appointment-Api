@@ -1,7 +1,7 @@
 import json
 
 from app.auth.controllers import UserController
-from app.database.model import user_schema, users_schema
+from app.auth.model import user_schema, users_schema
 from flask import request
 from app import app, db
 from app.auth.model import User
