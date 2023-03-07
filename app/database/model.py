@@ -37,12 +37,7 @@ from base_model import BaseModel
     #
     #     return md5_crypt.verify(password, self.password)
         
-class UserSchema(ma.Schema):
-    class Meta:
-        fields = ('id', 'firstName', 'lastName', 'email', 'password', 'phoneNumber', 'location', 'user_role', 'created')
-        
-user_schema = UserSchema()
-users_schema = UserSchema(many=True) 
+
 
 class Services(Base, db.Model):
     __tablename__ = 'services'
