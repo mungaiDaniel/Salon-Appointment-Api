@@ -1,11 +1,10 @@
 from app.auth.model import User
-from app.database.model import user_schema, users_schema
+from app.auth.model import user_schema, users_schema
 from app import db
 
 
 class UserController:
     model = User
-    schema = user_schema
 
     @classmethod
     def create_user(cls, data, session):

@@ -1,6 +1,6 @@
 import datetime
 from sqlalchemy import Column, Integer, String, DateTime, Enum
-from app import db
+from app import db, ma
 from base_model import Base
 from flask_jwt_extended import create_access_token
 from passlib.handlers.md5_crypt import md5_crypt
@@ -54,4 +54,11 @@ class User(Base, db.Model):
     def verify_password_hash(self, password):
     
         return md5_crypt.verify(password, self.password)
+    
+class UserSchema(ma.Schema):
+    class Meta:
+        fields = ('id', 'firstName', 'lastName', 'email', 'password', 'phoneNumber', 'location', 'user_role', 'created')
+        
+user_schema = UserSchema()
+users_schema = UserSchema(many=True) 
     

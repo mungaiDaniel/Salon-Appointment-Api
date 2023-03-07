@@ -1,6 +1,7 @@
-from app.database.model import user_schema, users_schema, service_schema,services_schemas, employee_schema, employees_schemas ,Services,UserServices, Bookings
+from app.auth.model import user_schema
 from flask import request, make_response, jsonify
 from app import app, db
+from app.database.model import UserServices
 import logging
 import json
 import app.utils.responses as resp

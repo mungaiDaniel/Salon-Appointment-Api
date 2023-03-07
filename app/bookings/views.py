@@ -1,6 +1,8 @@
-from app.database.model import  UserServices, Bookings, booking_schema, bookings_schemas ,user_schema, users_schema, service_schema,services_schemas, Services
+from app.database.model import  UserServices, Bookings, booking_schema, bookings_schemas
 from flask import request, make_response, jsonify
+from app.service.model import Services, service_schema, services_schemas
 from app import app, db
+from app.auth.model import User
 import logging
 import json
 import datetime
@@ -31,12 +33,12 @@ def get_userservices(employee_id):
 def book():
     
     email = get_jwt_identity()
-    user = Users.query.filter_by(email=email).first()
+    user = User.query.filter_by(email=email).first()
     
     
     data = request.get_json()
     employee = data['employee_id']
-    employee_id = Users.query.filter_by(id = employee).first()
+    employee_id = User.query.filter_by(id = employee).first()
     
     
     
