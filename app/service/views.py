@@ -1,15 +1,15 @@
-from app.database.model import user_schema, users_schema, service_schema,services_schemas, Services
+from app.service.model import service_schema, services_schemas, Services
 from flask import request, make_response, jsonify
 from app import app, db
 import logging
 from app.auth.model import User
 from app.utils.services import Query
-from app.service.model import ServiceModel
+from app.service.controllers import ServiceController
 import json
 import app.utils.responses as resp
 from app.utils.responses import m_return 
 from app.utils.decorators import permission
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required
 
 
 
@@ -19,29 +19,29 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 def add_style():
         
     data = request.get_json()
-    email = get_jwt_identity()
-    user_id= User.query.filter_by(email=email).first()
+    session = db.session
     
+    return ServiceController.create_service(data, session=session)
     
-    try:
-        style = data['style']
-        description = data['description']
-        cost = data['cost']
-        duration = data['duration']
-        user_id = user_id
+    # try:
+    #     style = data['style']
+    #     description = data['description']
+    #     cost = data['cost']
+    #     duration = data['duration']
+    #     user_id = user_id
         
         
         
-    except Exception as why:
+    # except Exception as why:
         
-        logging.warning(why)
+    #     logging.warning(why)
         
-        return m_return(http_code=resp.MISSED_PARAMETERS['http_code'], message=resp.MISSED_PARAMETERS['message'],
-                        code=resp.MISSED_PARAMETERS['code'])
+    #     return m_return(http_code=resp.MISSED_PARAMETERS['http_code'], message=resp.MISSED_PARAMETERS['message'],
+    #                     code=resp.MISSED_PARAMETERS['code'])
       
-    service = ServiceModel.create_service(style=style, description=description, cost=cost, duration=duration, user_id=user_id.id)
+    # service = ServiceModel.create_service(style=style, description=description, cost=cost, duration=duration, user_id=user_id.id)
     
-    return service_schema.jsonify(service), 201
+   
 
 @app.route('/stylings', methods=['GET'])
 def get_styles():
@@ -68,7 +68,7 @@ def update_style(id):
     cost = data['cost']
     duration = data['duration']
     
-    my_style = ServiceModel.update(id, style=style, description=description, cost=cost, duration=duration)
+    my_style = ServiceController.update(id, style=style, description=description, cost=cost, duration=duration)
     
     return service_schema.jsonify(my_style), 200
 
@@ -85,7 +85,7 @@ def delete_style(id):
                     message=resp.NOT_FOUND_404['message'],
                     code=resp.NOT_FOUND_404['code'])
      
-    ServiceModel.delete(service)
+    ServiceController.delete(service)
     
     return m_return(http_code=resp.DELETED_SUCCESS['http_code'],
                     message=resp.DELETED_SUCCESS['message'],

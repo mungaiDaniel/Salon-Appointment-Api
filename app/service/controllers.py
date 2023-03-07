@@ -1,20 +1,31 @@
-from app.database.model import Services, service_schema, services_schemas
+from app.service.model import Services, services_schemas, service_schema
 from app import db
+from app.auth.model import User
 from app.utils.responses import m_return
 import app.utils.responses as resp
+from flask_jwt_extended import  get_jwt_identity
 
 
 class ServiceController:
+    model = Services
     
-    @staticmethod
-    def create_service(style, description, cost, duration, user_id):
+    @classmethod
+    def create_service(cls, data, session):
         
-        service = Services(style=style, description=description, cost=cost, duration=duration, user_id=user_id) 
-
-        db.session.add(service)
-        db.session.commit()
+        email = get_jwt_identity()
+        user_id= User.query.filter_by(email=email).first()
+        service = cls.model(
+            style = data.get('style'),
+            description = data.get('description'),
+            cost = data.get('cost'),
+            duration = data.get('duration'),
+            user_id = user_id.id,
+            created_by = user_id.id
+        )
         
-        return service
+        cls.model.save(service, session=session)
+        
+        return service_schema.jsonify(service)
     
     @staticmethod
     def get_all(table):

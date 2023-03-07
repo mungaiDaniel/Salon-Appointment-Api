@@ -5,7 +5,6 @@ from app import db
 
 class UserController:
     model = User
-    schema = user_schema
 
     @classmethod
     def create_user(cls, data, session):
