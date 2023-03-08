@@ -27,26 +27,19 @@ class ServiceController:
         
         return service_schema.jsonify(service)
     
-    @staticmethod
-    def get_all(table):
-        service = db.session.query(table).all()
+    @classmethod
+    def get_all_services(cls, session):
+        service = Services.get_all(cls.model, session)
         
-        
-        return service
+        return services_schemas.jsonify(service)
     
     @classmethod
-    def get_one(cls, id):
+    def get_service_by_id(cls, id, session):
+        service = Services.get_one(cls.model, id, session)
         
-        service = Services.query.filter_by(id=id).first()
+        return service
         
-        if not service:
-            return m_return(http_code=resp.NOT_FOUND_404['http_code'],
-                        message=resp.NOT_FOUND_404['message'],
-                        code=resp.NOT_FOUND_404['code'])
-        
-        result = service_schema.jsonify(service)
-        
-        return result
+       
     
     @staticmethod
     def update(id, style, description, cost, duration):

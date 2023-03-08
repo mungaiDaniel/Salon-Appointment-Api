@@ -3,7 +3,7 @@ from flask import request, make_response, jsonify
 from app import app, db
 import logging
 from app.auth.model import User
-from app.utils.services import Query
+from base_model import BaseModel
 from app.service.controllers import ServiceController
 import json
 import app.utils.responses as resp
@@ -22,40 +22,22 @@ def add_style():
     session = db.session
     
     return ServiceController.create_service(data, session=session)
-    
-    # try:
-    #     style = data['style']
-    #     description = data['description']
-    #     cost = data['cost']
-    #     duration = data['duration']
-    #     user_id = user_id
-        
-        
-        
-    # except Exception as why:
-        
-    #     logging.warning(why)
-        
-    #     return m_return(http_code=resp.MISSED_PARAMETERS['http_code'], message=resp.MISSED_PARAMETERS['message'],
-    #                     code=resp.MISSED_PARAMETERS['code'])
-      
-    # service = ServiceModel.create_service(style=style, description=description, cost=cost, duration=duration, user_id=user_id.id)
-    
-   
 
 @app.route('/stylings', methods=['GET'])
 def get_styles():
     
-    my_styles = Query.get_all(Services)
+    session = db.session
     
-    return services_schemas.jsonify(my_styles)
+    return ServiceController.get_all_services(session=session)
 
 @app.route('/stylings/<int:id>', methods=['GET'])
 def one_styles(id):
     
-    my_style = Query.get_one(id, Services)
+    session = db.session
     
-    return service_schema.jsonify(my_style)
+    result = ServiceController.get_service_by_id(id, session=session)
+    
+    return service_schema.jsonify(result)
 
 @app.route('/stylings/<int:id>', methods=['PUT'])
 @permission(2)

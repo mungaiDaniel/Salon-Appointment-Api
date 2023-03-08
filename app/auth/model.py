@@ -14,7 +14,6 @@ class Admin(str, Enum):
 
 class User(Base, db.Model):
     __tablename__ = 'user'
-   
 
     id = Column(Integer, primary_key=True)
     firstName = Column(String(100))
@@ -23,42 +22,40 @@ class User(Base, db.Model):
     password = Column(String(1000))
     phoneNumber = Column(Integer)
     location = Column(String(100))
-    user_role = Column(String,  Enum('super_admin', 'admin', 'user', name='user_roles'), default='user')
+    user_role = Column(String, Enum('super_admin', 'admin', 'user', name='user_roles'), default='user')
     created = Column(DateTime, default=datetime.datetime.now())
-    
-    
-        
+
     def generate_auth_token(self, permission_level):
-    
-    
+
         if permission_level == 2:
-    
-            token = create_access_token(identity=self.email, additional_claims= {'admin': 2})
-    
+
+            token = create_access_token(identity=self.email, additional_claims={'admin': 2})
+
             return token
         elif permission_level == 1:
-    
-            token = create_access_token(identity= self.email, additional_claims= {'admin': 1})
-    
+
+            token = create_access_token(identity=self.email, additional_claims={'admin': 1})
+
             return token
-    
-        return create_access_token(identity=self.email, additional_claims= {'admin': 0})
-    
+
+        return create_access_token(identity=self.email, additional_claims={'admin': 0})
+
     @staticmethod
     def generate_password_hash(password):
-    
+
         h = md5_crypt.hash(password)
-    
+
         return h
-    
+
     def verify_password_hash(self, password):
-    
+
         return md5_crypt.verify(password, self.password)
-    
+
+
 class UserSchema(ma.Schema):
     class Meta:
         fields = ('id', 'firstName', 'lastName', 'email', 'password', 'phoneNumber', 'location', 'user_role', 'created')
-        
+
+
 user_schema = UserSchema()
-users_schema = UserSchema(many=True) 
-    
+users_schema = UserSchema(many=True)
