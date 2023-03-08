@@ -1,5 +1,6 @@
-from app.database.model import  UserServices, Bookings, booking_schema, bookings_schemas
+from app.database.model import  Bookings, booking_schema, bookings_schemas
 from flask import request, make_response, jsonify
+from app.assistances.model import UserServices
 from app.service.model import Services, service_schema, services_schemas
 from app import app, db
 from app.auth.model import User

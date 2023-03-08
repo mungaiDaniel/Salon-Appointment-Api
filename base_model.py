@@ -3,6 +3,10 @@ from sqlalchemy import Column, DateTime, String, Boolean
 from sqlalchemy.orm import declarative_base
 
 from exceptions import DatabaseError
+from app import db
+from app.utils.responses import m_return
+import app.utils.responses as resp
+import logging
 
 
 class BaseModel(object):
@@ -20,7 +24,7 @@ class BaseModel(object):
     date_updated = Column(
         DateTime(timezone=True), nullable=False, default=datetime.datetime.now
     )
-    created_by = Column(String(100), nullable=False)
+    created_by = Column(String(100), nullable=False, default="SYSTEM")
     active = Column(Boolean, nullable=False, default=True)
     deleted_at = Column(DateTime(timezone=True), nullable=True)
 
@@ -46,6 +50,23 @@ class BaseModel(object):
 
         for k, v in model_dict.items():
             getattr(self, k, setattr(self, k, v))
+
+    def get_all(self, session):
+        items = session.query(self).all()
+        return items
+
+    def get_one(self, id, session):
+
+        try:
+            items = session.query(self).get(id)
+
+        except Exception as why:
+
+            print('No user found by that id' + str(why))
+
+            return None
+
+        return items
 
 
 Base = declarative_base(cls=BaseModel)

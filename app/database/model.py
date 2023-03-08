@@ -7,25 +7,6 @@ from flask_jwt_extended import create_access_token
 
 from base_model import BaseModel
 
-
-class UserServices(Base, db.Model):
-    
-    __tablename__ = 'userservices'
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    service_id = db.Column(db.Integer, db.ForeignKey('services.id'))
-    
-    def __init__(self, user_id, service_id):
-        self.user_id = user_id
-        self.service_id = service_id
-
-class Employeeschema(ma.Schema):
-    class Meta:
-        fields = ('id', 'user_id', 'service_id')
-        
-employee_schema = Employeeschema()
-employees_schemas = Employeeschema(many=True)
-
 class Bookings(db.Model):
     __tablename__ = 'bookings'
     id = db.Column(db.Integer, primary_key=True)

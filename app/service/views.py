@@ -3,7 +3,7 @@ from flask import request, make_response, jsonify
 from app import app, db
 import logging
 from app.auth.model import User
-from app.utils.services import Query
+from base_model import BaseModel
 from app.service.controllers import ServiceController
 import json
 import app.utils.responses as resp
@@ -46,14 +46,14 @@ def add_style():
 @app.route('/stylings', methods=['GET'])
 def get_styles():
     
-    my_styles = Query.get_all(Services)
+    my_styles = BaseModel.get_all(Services)
     
     return services_schemas.jsonify(my_styles)
 
 @app.route('/stylings/<int:id>', methods=['GET'])
 def one_styles(id):
     
-    my_style = Query.get_one(id, Services)
+    my_style = BaseModel.get_one(id, Services)
     
     return service_schema.jsonify(my_style)
 
