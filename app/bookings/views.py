@@ -1,12 +1,10 @@
-from app.database.model import  Bookings, booking_schema, bookings_schemas
 from flask import request, make_response, jsonify
 from app.assistances.model import UserServices
 from app.service.model import Services, service_schema, services_schemas
 from app import app, db
+from app.bookings.model import booking_schema, bookings_schemas
 from app.auth.model import User
-import logging
-import json
-import datetime
+from app.bookings.controllers import BookingController
 import app.utils.responses as resp
 from app.utils.responses import m_return 
 from app.utils.decorators import permission
@@ -33,28 +31,26 @@ def get_userservices(employee_id):
 @jwt_required()
 def book():
     
-    email = get_jwt_identity()
-    user = User.query.filter_by(email=email).first()
-    
-    
     data = request.get_json()
-    employee = data['employee_id']
-    employee_id = User.query.filter_by(id = employee).first()
+    session = db.session
     
+    return BookingController.book_appointment(data, session=session)
+
+@app.route('/booking', methods=['GET'])
+def get_all_bookings():
+    session = db.session
     
+    return BookingController.get_all_bookings(session=session)
+
+@app.route('/booking/<int:id>', methods=['GET'])
+def get_one_booking(id):
+    session = db.session
     
+    result = BookingController.get_booking_by_id(id, session=session)
     
-    service = data['service_id']
-    service_id = Services.query.filter_by(id= service).first()
-    
-    
-    bookings = Bookings(employee_id=employee_id.id, service_id=service_id.id, user_id=user.id, time=datetime.datetime.now())
-    
-    db.session.add(bookings)
-    db.session.commit()
-    
-    return booking_schema.jsonify(bookings)
-    
+    return booking_schema.jsonify(result)
+
+
     
     
     
