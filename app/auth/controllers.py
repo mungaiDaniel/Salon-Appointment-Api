@@ -55,12 +55,9 @@ class UserController:
 
 
         if user is None:
-            print('()()()()()', user)
             return  404, jsonify({
                 'message': 'No user found'
             })
-
-        print('IIHJK<><><><><><><<><>',user)
         
         return user
 
@@ -68,6 +65,6 @@ class UserController:
     def get_all_users(cls, session):
         users = User.get_all(cls.model, session)
 
-        return users
+        return users_schema.jsonify(users)
         
         
