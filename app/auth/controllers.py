@@ -1,11 +1,12 @@
 from app.auth.model import User
-from app.database.model import user_schema, users_schema
+from app.auth.model import user_schema, users_schema
 from app import db
+from flask import jsonify
+
 
 
 class UserController:
     model = User
-    schema = user_schema
 
     @classmethod
     def create_user(cls, data, session):
@@ -47,3 +48,26 @@ class UserController:
         db.session.commit()
 
         return user_schema.jsonify(admin), 200
+    @classmethod
+    def get_user_by_id(cls, id, session):
+        user = User.get_one(cls.model, id, session)
+
+
+
+        if user is None:
+            print('()()()()()', user)
+            return  404, jsonify({
+                'message': 'No user found'
+            })
+
+        print('IIHJK<><><><><><><<><>',user)
+        
+        return user
+
+    @classmethod
+    def get_all_users(cls, session):
+        users = User.get_all(cls.model, session)
+
+        return users
+        
+        

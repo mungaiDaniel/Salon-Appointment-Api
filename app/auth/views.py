@@ -1,16 +1,13 @@
-import json
-
 from app.auth.controllers import UserController
-from app.database.model import user_schema, users_schema
+from app.auth.model import user_schema, users_schema
 from flask import request
 from app import app, db
 from app.auth.model import User
 import logging
-from app.utils.services import Query
+from base_model import BaseModel
 import app.utils.responses as resp
 from app.utils.responses import m_return
-from app.utils.decorators import permission
-from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt_identity, decode_token
+from flask_jwt_extended import create_refresh_token
 
 
 
@@ -23,16 +20,17 @@ def add_user():
 
 @app.route('/users/<int:id>', methods=['GET'])
 def get_one(id):
-    result = Query.get_one(id, User)
+    session = db.session
+    result = UserController.get_user_by_id(id, session=session)
 
     return user_schema.jsonify(result)
 
 
 @app.route('/users', methods=['GET'])
 def get_all():
-    results = Query.get_all(User)
+    session = db.session
 
-    return users_schema.jsonify(results)
+    return UserController.get_all_users(session=session)
 
 
 @app.route('/login', methods=['POST'])

@@ -1,6 +1,8 @@
-from app.database.model import user_schema, users_schema, service_schema,services_schemas, employee_schema, employees_schemas ,Services,UserServices, Bookings
+from app.auth.model import user_schema
 from flask import request, make_response, jsonify
 from app import app, db
+from app.assistances.model import UserServices
+from app.assistances.controllers import UserServicesControll
 import logging
 import json
 import app.utils.responses as resp
@@ -10,12 +12,11 @@ from flask_jwt_extended import create_access_token, create_refresh_token ,jwt_re
 
 @app.route('/employee/<int:user_id>/<int:service_id>', methods=['POST'])
 def add_employee(service_id,user_id):
-    user_service = UserServices(service_id=service_id,user_id=user_id)
-    db.session.add(user_service)
-    db.session.commit()    
-    return {
-        "message":"success"
-    }
+    session = db.session
+    
+    return UserServicesControll.create_assistanceServices(service_id=service_id, user_id=user_id, session=session)
+    
+    
 
 @app.route('/employee/<int:user_id>', methods=['GET'])
 def employee_NY_ID(user_id):
