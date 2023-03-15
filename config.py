@@ -1,7 +1,7 @@
 import os
 
 basedir = os.path.abspath(os.path.dirname(__file__))
-postgre_local_base = "postgresql://postgres:username@localhost:5432/Salon-api"
+postgre_local_base = "postgresql://postgres:username@localhost:5432/Salon-Api"
 
 class Config:
         SECRET_KEY = os.environ.get('SECRET_KEY') or 'you-will-never-guess'
@@ -16,7 +16,7 @@ class DevelopmentConfig(Config):
 class TestingConfig(Config):
         
         TESTING = True
-        SQLALCHEMY_DATABASE_URI = "postgresql://postgres:username@localhost:5432/salon_test"
+        SQLALCHEMY_DATABASE_URI = "postgresql://postgres:username@localhost:5432/test-api"
         
 class ProductionConfig(Config):
         

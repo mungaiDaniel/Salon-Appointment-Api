@@ -8,13 +8,12 @@ from flask_migrate import Migrate
 
 app = Flask(__name__)
 app.config.from_object(DevelopmentConfig)
-db = SQLAlchemy(app)
-ma = Marshmallow(app)
-migrate = Migrate(app)
 app.config["JWT_SECRET_KEY"] = "super-secret"
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=24)
 app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=30)
 jwt = JWTManager(app)
+db = SQLAlchemy(app)
+ma = Marshmallow(app)
 app.app_context().push()
 
 

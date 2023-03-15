@@ -37,6 +37,8 @@ def get_all():
 def login():
     data = request.get_json()
 
+    print('<><><><><><><><><>', data)
+
     try:
         email = data['email']
         password = (data['password'])

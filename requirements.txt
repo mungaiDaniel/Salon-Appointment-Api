@@ -66,7 +66,6 @@ rich==13.3.1
 six==1.15.0
 SQLAlchemy==2.0.4
 tomli==2.0.1
-Transcrypt==3.9.0
 typing-extensions==4.4.0
 urllib3==1.26.12
 uvicorn==0.20.0
