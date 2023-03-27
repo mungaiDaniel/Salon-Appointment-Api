@@ -2,19 +2,26 @@ import json
 from app.auth.model import User
 from app import db
 def register_user(self):
+    password = User.generate_password_hash("123456")
     return self.client.post(
         '/users',
         data=json.dumps(dict(
-            firstName='fa-firstname', lastName='la-lastname', email='fa_example@gmail.com', password='123456', location='uthiru waiyakiway', user_role='super_admin', phoneNumber='0727980611'
+            firstName='ma-firstname', 
+                        lastName='ma-lastname',
+                        email='mama_example@gmail.com', 
+                        password=password, 
+                        location='uthiru waiyakiway', 
+                        user_role='super_admin', 
+                        phoneNumber='0727980611'
         )),
         content_type='application/json'
     )
     
 def login_user(self):
-    return self.app.post(
+    return self.client.post(
         "/login",
         data = json.dumps(dict(
-            email='fa_example@gmail.com', password='123456'
+           email='mama_example@gmail.com',  password='123456'
         )),
         content_type='application/json'
     )

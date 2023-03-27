@@ -1,15 +1,16 @@
 from app.auth.controllers import UserController
 from app.auth.model import user_schema, users_schema
-from flask import request
+from flask import request, Blueprint
 from app import app, db
 from app.auth.model import User
 import logging
+from flask import jsonify, make_response
 from base_model import BaseModel
 import app.utils.responses as resp
 from app.utils.responses import m_return
 from flask_jwt_extended import create_refresh_token
 
-
+user_v1 = Blueprint("user_v1", __name__, url_prefix='/api/v1')
 
 @app.route('/users', methods=['POST'])
 def add_user():
@@ -22,9 +23,14 @@ def add_user():
 def get_one(id):
     session = db.session
     result = UserController.get_user_by_id(id, session=session)
+    print('?????????????', result)
+    if result:
 
-    return user_schema.jsonify(result)
-
+        return user_schema.jsonify(result)
+    return make_response(jsonify({
+            "status": 404,
+            "message": "user doesn't exist"
+        }), 404)
 
 @app.route('/users', methods=['GET'])
 def get_all():
@@ -36,9 +42,7 @@ def get_all():
 @app.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
-
-    print('<><><><><><><><><>', data)
-
+    
     try:
         email = data['email']
         password = (data['password'])
@@ -88,13 +92,19 @@ def login():
                     value={'access_token': access_token, 'refresh_token': refresh_token})
 
 
-@app.route('/admin/<int:id>', methods=['PUT'])
+@app.route('/super_admin/<int:id>', methods=['PUT'])
 def superAdmin(id):
-    data = request.get_json()
 
-    user_role = data['user_role']
 
-    admin = UserController.promote_user(id, user_role=user_role)
+    admin = UserController.promote_user(id)
+
+    return admin
+
+@app.route('/admin/<int:id>', methods=['PUT'])
+def make_assisstance(id):
+
+
+    admin = UserController.user_admin(id)
 
     return admin
 

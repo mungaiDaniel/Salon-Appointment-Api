@@ -1,14 +1,12 @@
 from app import db
 from app.auth.model import User
-from tests.test_base import BaseTestCase
+from Test.test_base import BaseTestCase
 import json
-from tests.helper_function import create_test_user
 
 class TestUser(BaseTestCase):
 
     def test_user_create(self):
         user = User(firstName='fa-firstname', lastName='la-lastname', email='fa_example@gmail.com', password='123456', location='uthiru waiyakiway', user_role='user', phoneNumber='0727980611')
-
         db.session.add(user)
         db.session.commit()
         assert user in db.session
@@ -38,12 +36,11 @@ class LoginTest(BaseTestCase):
             db.session.commit()
 
         def test_login(self):
-            response = self.app.post("/login",
+            response = self.client.post("/login",
                                     data=json.dumps(
                                         dict(email='mama_example@gmail.com',  password='123456')),
                                     content_type='application/json')
             data = json.loads(response.data)
-            print("::::::::::::::::", data)
             self.assertEqual(response.status_code, 200) 
             self.assertTrue('access_token' in data.get('value'))
             self.assertEqual('SUCCESS.', data.get('message'))

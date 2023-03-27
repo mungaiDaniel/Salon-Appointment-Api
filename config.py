@@ -1,22 +1,30 @@
 import os
 
-basedir = os.path.abspath(os.path.dirname(__file__))
-postgre_local_base = "postgresql://postgres:username@localhost:5432/Salon-Api"
+postgre_local_base = "postgresql://postgres:username@localhost/salon-api"
 
-class Config:
-        SECRET_KEY = os.environ.get('SECRET_KEY') or 'you-will-never-guess'
+class Config(object):
         DEBUG = True
+        TESTING = False
+        CSRF_ENABLED = True
+        JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY') or 'you-will-never-guess'
+    
         SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+    
+class TestingConfig(Config):
+        TESTING = False
+        DEBUG = True
+        DEVELOPMENT = False
+        TESTING = True
+        SECRET_KEY = os.environ.get('SECRET_KEY') or 'you-will-never-guess'
+        SQLALCHEMY_DATABASE_URI = "postgresql://postgres:username@localhost/test-salon-api"
+
         
 class DevelopmentConfig(Config):
-        
+        SECRET_KEY = os.environ.get('SECRET_KEY') or 'you-will-never-guess'
         SQLALCHEMY_DATABASE_URI = postgre_local_base
         DEBUG = True
-        
-class TestingConfig(Config):
-        
-        TESTING = True
-        SQLALCHEMY_DATABASE_URI = "postgresql://postgres:username@localhost:5432/test-api"
+        DEVELOPMENT = True
         
 class ProductionConfig(Config):
         
@@ -24,11 +32,5 @@ class ProductionConfig(Config):
         DEBUG = False
         SQLALCHEMY_DATABASE_URI = 'postgresql:///example'
         
-app_config = {
-    'production': ProductionConfig,
-    'development': DevelopmentConfig,
-    'testing': TestingConfig,
-    'default': DevelopmentConfig
-}
         
         
