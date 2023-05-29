@@ -1,6 +1,6 @@
 import os
 
-postgre_local_base = "postgresql://postgres:username@localhost/salon-api"
+postgre_local_base = "postgresql://postgres:username@localhost/gerente"
 
 class Config(object):
         DEBUG = True

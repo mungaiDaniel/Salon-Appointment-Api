@@ -8,7 +8,7 @@ from flask import jsonify, make_response
 from base_model import BaseModel
 import app.utils.responses as resp
 from app.utils.responses import m_return
-from flask_jwt_extended import create_refresh_token
+from flask_jwt_extended import create_refresh_token, verify_jwt_in_request
 
 user_v1 = Blueprint("user_v1", __name__, url_prefix='/api/v1')
 
@@ -86,10 +86,11 @@ def login():
                         code=resp.PERMISSION_DENIED['code'])
 
     refresh_token = create_refresh_token(identity={'email': email})
+    
 
     return m_return(http_code=resp.SUCCESS['http_code'],
                     message=resp.SUCCESS['message'],
-                    value={'access_token': access_token, 'refresh_token': refresh_token})
+                    value={'access_token': access_token, 'refresh_token': refresh_token, 'user_role':user.user_role, 'user': user.firstName })
 
 
 @app.route('/super_admin/<int:id>', methods=['PUT'])

@@ -8,8 +8,8 @@ from flask_cors import CORS
 app = Flask(__name__)
 app.config["JWT_SECRET_KEY"] = "super-secret"
 app.config.from_object(DevelopmentConfig)
-app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=24)
-app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=30)
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=1)
+app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=1)
 JWTManager(app)
 CORS(app, supports_credentials=True)
 db = SQLAlchemy(app)

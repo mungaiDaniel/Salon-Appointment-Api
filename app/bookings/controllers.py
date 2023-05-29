@@ -22,7 +22,8 @@ class BookingController:
         service_id = Services.query.filter_by(id= service).first()
         
         bookings = cls.model(
-            time = datetime.datetime.utcnow(),
+            date = data.get('date'),
+            time = data.get('time'),
             employee_id = employee_id.id,
             service_id = service_id.id,
             user_id = user_id.id
