@@ -69,3 +69,4 @@ $ FLASK_APP=manage.py python -m flask run
 ```
 $ coverage run -m pytest 
 ```
+## Endpoints
