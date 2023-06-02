@@ -1,6 +1,6 @@
 from app.auth.model import User
-from app.auth.model import user_schema, users_schema
-from app import db
+from app.schemas.schemas import user_schema, users_schema
+from app.database.database import db
 from flask import jsonify, make_response
 
 
@@ -23,21 +23,16 @@ class UserController:
             location=data.get('location'),
             created_by="SYSTEM"
         )
-        # if user.email:
-        #     return make_response(jsonify({
-        #         "status": 409,
-        #         "message": "Email already registered"
-        #     }), 409)
         
         cls.model.save(user, session=session)
        
-        return user_schema.jsonify(user)
+        return user_schema.dump(user), 201
 
     @staticmethod
     def get_admin():
         user_role = 'super_admin'
         employe = User.query.filter_by(user_role=user_role).all()
-        result = users_schema.jsonify(employe)
+        result = users_schema.dump(employe)
 
         return result
 
@@ -53,7 +48,7 @@ class UserController:
 
         db.session.commit()
 
-        return user_schema.jsonify(admin), 200
+        return user_schema.dump(admin), 200
     @classmethod
     def user_admin(cls, id):
 
@@ -66,7 +61,7 @@ class UserController:
 
         db.session.commit()
 
-        return user_schema.jsonify(admin), 200
+        return user_schema.dump(admin), 200
     @classmethod
     def get_user_by_id(cls, id, session):
         user = User.get_one(cls.model, id, session)
@@ -84,6 +79,6 @@ class UserController:
     def get_all_users(cls, session):
         users = User.get_all(cls.model, session)
 
-        return users_schema.jsonify(users)
+        return users_schema.dump(users)
         
         

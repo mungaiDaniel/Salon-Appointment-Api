@@ -1,4 +1,4 @@
-from app import db
+from main import db
 from app.service.model import Services
 from Test.test_base import BaseTestCase
 import json

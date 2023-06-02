@@ -1,6 +1,6 @@
 import json
 from app.auth.model import User
-from app import db
+from main import db
 def register_user(self):
     password = User.generate_password_hash("123456")
     return self.client.post(

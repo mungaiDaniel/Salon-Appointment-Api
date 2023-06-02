@@ -1,5 +1,6 @@
-from app.assistances.model import UserServices, employee_schema, employees_schemas
-from app import db
+from app.assistances.model import UserServices
+from app.schemas.schemas import employee_schema
+from app.database.database import db
 from sqlalchemy.sql import exists
 from app.auth.model import User
 
@@ -20,4 +21,4 @@ class UserServicesControll:
         )
         cls.model.save(assistanceServices, session=session)
         
-        return employee_schema.jsonify(assistanceServices)
+        return employee_schema.dump(assistanceServices)

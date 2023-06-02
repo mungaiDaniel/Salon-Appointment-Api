@@ -1,4 +1,4 @@
-from app import db, ma
+from app.database.database import db
 from base_model import Base
 
 
@@ -13,9 +13,3 @@ class Services(Base, db.Model):
     duration = db.Column(db.Integer)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
-class Serviceschema(ma.Schema):
-    class Meta:
-        fields = ('id', 'style', 'description', 'cost', 'duration', 'user_id')
-        
-service_schema = Serviceschema()
-services_schemas = Serviceschema(many=True)

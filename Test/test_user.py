@@ -1,4 +1,4 @@
-from app import db
+from main import db
 from app.auth.model import User
 from Test.test_base import BaseTestCase
 import json

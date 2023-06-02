@@ -1,7 +1,7 @@
 
 from unittest import TestCase
 from config import TestingConfig
-from app import  db, app
+from main import  db, app
 
 class BaseTestCase(TestCase):
     

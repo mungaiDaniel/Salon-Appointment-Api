@@ -1,45 +1,44 @@
 from app.auth.controllers import UserController
-from app.auth.model import user_schema, users_schema
 from flask import request, Blueprint
-from app import app, db
+from app.database.database import db
+from app.schemas.schemas import user_schema
 from app.auth.model import User
 import logging
 from flask import jsonify, make_response
-from base_model import BaseModel
 import app.utils.responses as resp
 from app.utils.responses import m_return
-from flask_jwt_extended import create_refresh_token, verify_jwt_in_request
+from flask_jwt_extended import create_refresh_token
 
 user_v1 = Blueprint("user_v1", __name__, url_prefix='/api/v1')
 
-@app.route('/users', methods=['POST'])
+@user_v1.route('/users', methods=['POST'])
 def add_user():
     data = request.get_json()
     session = db.session
     return UserController.create_user(data, session=session)
 
 
-@app.route('/users/<int:id>', methods=['GET'])
+@user_v1.route('/users/<int:id>', methods=['GET'])
 def get_one(id):
     session = db.session
     result = UserController.get_user_by_id(id, session=session)
     print('?????????????', result)
     if result:
 
-        return user_schema.jsonify(result)
+        return user_schema.dump(result)
     return make_response(jsonify({
             "status": 404,
             "message": "user doesn't exist"
         }), 404)
 
-@app.route('/users', methods=['GET'])
+@user_v1.route('/users', methods=['GET'])
 def get_all():
     session = db.session
 
     return UserController.get_all_users(session=session)
 
 
-@app.route('/login', methods=['POST'])
+@user_v1.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
     
@@ -93,7 +92,7 @@ def login():
                     value={'access_token': access_token, 'refresh_token': refresh_token, 'user_role':user.user_role, 'user': user.firstName })
 
 
-@app.route('/super_admin/<int:id>', methods=['PUT'])
+@user_v1.route('/super_admin/<int:id>', methods=['PUT'])
 def superAdmin(id):
 
 
@@ -101,7 +100,7 @@ def superAdmin(id):
 
     return admin
 
-@app.route('/admin/<int:id>', methods=['PUT'])
+@user_v1.route('/admin/<int:id>', methods=['PUT'])
 def make_assisstance(id):
 
 
@@ -110,7 +109,7 @@ def make_assisstance(id):
     return admin
 
 
-@app.route('/employees', methods=['GET'])
+@user_v1.route('/employees', methods=['GET'])
 def Admin():
     results = UserController.get_admin()
 

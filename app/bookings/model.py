@@ -1,5 +1,4 @@
-from app import db, ma
-from datetime import datetime
+from app.database.database import db
 from base_model import Base
 
 class Bookings(Base, db.Model):
@@ -12,9 +11,3 @@ class Bookings(Base, db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     
         
-class Bookingschema(ma.Schema):
-    class Meta:
-        fields = ('id', 'date', 'time' ,'employee_id' ,'user_id', 'service_id')
-        
-booking_schema = Bookingschema()
-bookings_schemas = Bookingschema(many=True)
