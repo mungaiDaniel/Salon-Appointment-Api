@@ -1,16 +1,16 @@
-from flask import request, make_response, jsonify
+from flask import request, Blueprint
 from app.assistances.model import UserServices
-from app.service.model import Services, service_schema, services_schemas
-from app import app, db
-from app.bookings.model import booking_schema, bookings_schemas
-from app.auth.model import User
+from app.service.model import Services
+from app.database.database import db
+from app.schemas.schemas import services_schemas
+from app.schemas.schemas import booking_schema
 from app.bookings.controllers import BookingController
-import app.utils.responses as resp
-from app.utils.responses import m_return 
-from app.utils.decorators import permission
-from flask_jwt_extended import create_access_token, create_refresh_token ,jwt_required, get_jwt_identity,decode_token
+from flask_jwt_extended import jwt_required
 
-@app.route('/employee_service/<int:employee_id>', methods=['GET'])
+
+booking_v1 = Blueprint('booking_v1', __name__, url_prefix='/api/v1')
+
+@booking_v1.route('/employee_service/<int:employee_id>', methods=['GET'])
 def get_userservices(employee_id):
 
     employ_services = Services.query \
@@ -22,12 +22,12 @@ def get_userservices(employee_id):
     result = db.session.execute(employ_services)
     names = [row[0] for row in result]
     
-    res = services_schemas.jsonify(names)
+    res = services_schemas.dump(names)
     
     
     return res
 
-@app.route('/booking', methods=['POST'])
+@booking_v1.route('/booking', methods=['POST'])
 @jwt_required()
 def book():
     
@@ -36,19 +36,21 @@ def book():
     
     return BookingController.book_appointment(data, session=session)
 
-@app.route('/booking', methods=['GET'])
+@booking_v1.route('/booking', methods=['GET'])
 def get_all_bookings():
     session = db.session
     
     return BookingController.get_all_bookings(session=session)
 
-@app.route('/booking/<int:id>', methods=['GET'])
+@booking_v1.route('/booking/<int:id>', methods=['GET'])
 def get_one_booking(id):
     session = db.session
     
     result = BookingController.get_booking_by_id(id, session=session)
     
-    return booking_schema.jsonify(result)
+    return booking_schema.dump(result)
+
+
 
 
     

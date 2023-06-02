@@ -3,10 +3,10 @@ from sqlalchemy import Column, DateTime, String, Boolean
 from sqlalchemy.orm import declarative_base
 
 from exceptions import DatabaseError
-from app import db
 from app.utils.responses import m_return
 import app.utils.responses as resp
 import logging
+from flask import jsonify, make_response
 
 
 class BaseModel(object):
@@ -29,25 +29,10 @@ class BaseModel(object):
     deleted_at = Column(DateTime(timezone=True), nullable=True)
 
     def save(self, session):
-        """Save record to database
-
-        Args:
-            session (_type_): database session
-        """
-        try:
-            session.add(self)
-            session.commit()
-        except Exception as exc:
-            # session.rollback()
-            raise DatabaseError("problem saving record to database")
-
+        session.add(self)
+        session.commit()
+     
     def set_model_dict(self, model_dict):
-        """Create a model from a dictionary data
-
-        Args:
-            model_dict (_type_): data in a dict
-        """
-
         for k, v in model_dict.items():
             getattr(self, k, setattr(self, k, v))
 
@@ -57,16 +42,25 @@ class BaseModel(object):
 
     def get_one(self, id, session):
 
+
         try:
             items = session.query(self).get(id)
+            print('::::::::::::', items)
+
+            if items:
+
+                return items
+        
+            return items
 
         except Exception as why:
 
-            print('No user found by that id' + str(why))
+            logging.info("User doesn't exist" + str(why))
 
-            return None
+            return m_return(http_code=resp.USER_DOES_NOT_EXIST['http_code'], message=resp.USER_DOES_NOT_EXIST['message'],
+                            code=resp.USER_DOES_NOT_EXIST['code'])
 
-        return items
+        
 
 
 Base = declarative_base(cls=BaseModel)
