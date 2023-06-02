@@ -1,6 +1,7 @@
-from app.service.model import Services, services_schemas, service_schema
-from app import db
+from app.service.model import Services
+from app.schemas.schemas import services_schemas, service_schema
 from app.auth.model import User
+from app.database.database import db
 from app.utils.responses import m_return
 import app.utils.responses as resp
 from flask_jwt_extended import  get_jwt_identity
@@ -25,13 +26,13 @@ class ServiceController:
         
         cls.model.save(service, session=session)
         
-        return service_schema.jsonify(service)
+        return service_schema.dump(service)
     
     @classmethod
     def get_all_services(cls, session):
         service = Services.get_all(cls.model, session)
         
-        return services_schemas.jsonify(service)
+        return services_schemas.dump(service)
     
     @classmethod
     def get_service_by_id(cls, id, session):

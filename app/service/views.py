@@ -1,19 +1,16 @@
-from app.service.model import service_schema, services_schemas, Services
-from flask import request, make_response, jsonify
-from app import app, db
-import logging
-from app.auth.model import User
-from base_model import BaseModel
+from app.service.model import Services
+from flask import request, Blueprint
+from app.database.database import db
+from app.schemas.schemas import service_schema
 from app.service.controllers import ServiceController
-import json
 import app.utils.responses as resp
 from app.utils.responses import m_return 
 from app.utils.decorators import permission
 from flask_jwt_extended import jwt_required
 
+service_v1 = Blueprint('service_v1', __name__, url_prefix='/api/v1')
 
-
-@app.route('/stylings', methods=['POST'])
+@service_v1.route('/stylings', methods=['POST'])
 @jwt_required()
 @permission(2)
 def add_style():
@@ -23,23 +20,23 @@ def add_style():
     
     return ServiceController.create_service(data, session=session)
 
-@app.route('/stylings', methods=['GET'])
+@service_v1.route('/stylings', methods=['GET'])
 def get_styles():
     
     session = db.session
     
     return ServiceController.get_all_services(session=session)
 
-@app.route('/stylings/<int:id>', methods=['GET'])
+@service_v1.route('/stylings/<int:id>', methods=['GET'])
 def one_styles(id):
     
     session = db.session
     
     result = ServiceController.get_service_by_id(id, session=session)
     
-    return service_schema.jsonify(result)
+    return service_schema.dump(result)
 
-@app.route('/stylings/<int:id>', methods=['PUT'])
+@service_v1.route('/stylings/<int:id>', methods=['PUT'])
 @permission(2)
 def update_style(id):
     
@@ -52,11 +49,11 @@ def update_style(id):
     
     my_style = ServiceController.update(id, style=style, description=description, cost=cost, duration=duration)
     
-    return service_schema.jsonify(my_style), 200
+    return service_schema.dump(my_style), 200
 
 
     
-@app.route('/stylings/<int:id>', methods=['DELETE'])
+@service_v1.route('/stylings/<int:id>', methods=['DELETE'])
 @permission(2)
 def delete_style(id):
      

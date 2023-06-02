@@ -1,9 +1,9 @@
-from app.bookings.model import Bookings, booking_schema, bookings_schemas
-from app import db
+from app.bookings.model import Bookings
+from app.database.database import db
+from app.schemas.schemas import booking_schema, bookings_schemas
 from flask_jwt_extended import  get_jwt_identity
 from app.auth.model import User
 from app.service.model import Services
-import datetime
 
 class BookingController:
     
@@ -22,20 +22,21 @@ class BookingController:
         service_id = Services.query.filter_by(id= service).first()
         
         bookings = cls.model(
-            time = datetime.datetime.utcnow(),
+            date = data.get('date'),
+            time = data.get('time'),
             employee_id = employee_id.id,
             service_id = service_id.id,
             user_id = user_id.id
         )
         cls.model.save(bookings, session=session)
         
-        return booking_schema.jsonify(bookings)
+        return booking_schema.dump(bookings)
         
     @classmethod
     def get_all_bookings(cls, session):
         book = Bookings.get_all(cls.model, session)
         
-        return bookings_schemas.jsonify(book)
+        return bookings_schemas.dump(book)
     
     @classmethod
     def get_booking_by_id(cls, id, session):
