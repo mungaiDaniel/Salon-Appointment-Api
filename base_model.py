@@ -45,7 +45,6 @@ class BaseModel(object):
 
         try:
             items = session.query(self).get(id)
-            print('::::::::::::', items)
 
             if items:
 

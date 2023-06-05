@@ -22,7 +22,6 @@ def add_user():
 def get_one(id):
     session = db.session
     result = UserController.get_user_by_id(id, session=session)
-    print('?????????????', result)
     if result:
 
         return user_schema.dump(result)
