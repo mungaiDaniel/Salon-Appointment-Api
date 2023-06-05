@@ -4,12 +4,12 @@ from main import db
 def register_user(self):
     password = User.generate_password_hash("123456")
     return self.client.post(
-        '/users',
+        'api/v1/users',
         data=json.dumps(dict(
             firstName='ma-firstname', 
                         lastName='ma-lastname',
                         email='mama_example@gmail.com', 
-                        password=password, 
+                        password='123456', 
                         location='uthiru waiyakiway', 
                         user_role='super_admin', 
                         phoneNumber='0727980611'
@@ -19,7 +19,7 @@ def register_user(self):
     
 def login_user(self):
     return self.client.post(
-        "/login",
+        "api/v1/login",
         data = json.dumps(dict(
            email='mama_example@gmail.com',  password='123456'
         )),
