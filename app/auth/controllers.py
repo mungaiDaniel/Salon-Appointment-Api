@@ -24,6 +24,15 @@ class UserController:
             created_by="SYSTEM"
         )
         
+
+        if session.query(User.query.filter(User.email == user.email).exists()).scalar():
+            
+            return make_response(jsonify({
+            "status": 409,
+            "message": "user with that email already exists"
+        }), 409)
+        
+
         cls.model.save(user, session=session)
        
         return user_schema.dump(user), 201
@@ -65,15 +74,13 @@ class UserController:
     @classmethod
     def get_user_by_id(cls, id, session):
         user = User.get_one(cls.model, id, session)
-        print('<><><><><>', user)
-        if user:
-
-            return user
+    
+        if user is  None:
+            
+            return         
+        return user
         
-        return make_response(jsonify({
-            "status": 404,
-            "message": "user doesn't exist"
-        }), 404)
+        
 
     @classmethod
     def get_all_users(cls, session):
