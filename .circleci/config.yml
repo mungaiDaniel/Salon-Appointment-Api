@@ -1,9 +1,9 @@
 # Use the latest 2.1 version of CircleCI pipeline process engine.
-# See: https://circleci.com/docs/2.0/configuration-reference
+# See: https://circleci.com/docs/configuration-reference
 version: 2.1
 
 # Orbs are reusable packages of CircleCI configuration that you may share across projects, enabling you to create encapsulated, parameterized commands, jobs, and executors that can be used across multiple projects.
-# See: https://circleci.com/docs/2.0/orb-intro/
+# See: https://circleci.com/docs/orb-intro/
 orbs:
   # The python orb contains a set of prepackaged CircleCI configuration you can use repeatedly in your configuration files
   # Orb commands and jobs help you with common scripting around a language/tool
@@ -12,10 +12,10 @@ orbs:
   python: circleci/python@1.5.0
 
 # Define a job to be invoked later in a workflow.
-# See: https://circleci.com/docs/2.0/configuration-reference/#jobs
+# See: https://circleci.com/docs/configuration-reference/#jobs
 jobs:
   build-and-test: # This is the name of the job, feel free to change it to better match what you're trying to do!
-    # These next lines defines a Docker executors: https://circleci.com/docs/2.0/executor-types/
+    # These next lines defines a Docker executors: https://circleci.com/docs/executor-types/
     # You can specify an image from Dockerhub or use one of the convenience images from CircleCI's Developer Hub
     # A list of available CircleCI Docker convenience images are available here: https://circleci.com/developer/images/image/cimg/python
     # The executor is the environment in which the steps below will be executed - below will use a python 3.10.2 container
@@ -27,37 +27,19 @@ jobs:
     # Here we're making sure we use just use the system-wide pip. By default it uses the project root's requirements.txt.
     # Then run your tests!
     # CircleCI will report the results back to your VCS provider.
-        environment:
-          DATABASE_URL: postgres://postgres:username@localhost/testsalon
-        auth:
-          username: postgres
-          password: username
-
-      - image: cimg/postgres:14.0
-        auth:
-          username: postgres
-          password: username
-        environment: 
-          POSTGRES_USER: postgres
-          POSTGRES_DB: testsalon
-          -e POSTGRES_PASSWORD: username
-
-
-
-        
-
-      
-
     steps:
       - checkout
       - python/install-packages:
           pkg-manager: pip
-          # app-dir: ~/project/package-directory/  # If you're requirements.txt isn't in the root directory.
+          # app-dir: ~/project/package-directory/  # If your requirements.txt isn't in the root directory.
           # pip-dependency-file: test-requirements.txt  # if you have a different name for your requirements file, maybe one that combines your runtime and test requirements.
       - run:
           name: Run tests
           # This assumes pytest is installed via the install-package step above
           command: coverage run -m pytest -W ignore
+
+# Invoke jobs via workflows
+# See: https://circleci.com/docs/configuration-reference/#workflows
 workflows:
   sample: # This is the name of the workflow, feel free to change it to better match your workflow.
     # Inside the workflow, you define the jobs you want to run.
