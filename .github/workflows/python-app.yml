@@ -36,6 +36,7 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
       run: 
-           coverage run -m pytest -W ignore
-           export DATABASE_URL=postgresql://username:7g9dB25gyhqv09nvOisRgIjg6Qa8tC1o@dpg-chvfe51mbg5b5peu6vcg-a.oregon-postgres.render.com/salon_online
+        export DATABASE_URL=postgresql://username:7g9dB25gyhqv09nvOisRgIjg6Qa8tC1o@dpg-chvfe51mbg5b5peu6vcg-a.oregon-postgres.render.com/salon_online
+        coverage run -m pytest -W ignore
+           
         
