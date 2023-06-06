@@ -11,15 +11,12 @@ class TestingConfig():
         
 class DevelopmentConfig():
         SECRET_KEY = os.environ.get('SECRET_KEY') or 'you-will-never-guess'
-        SQLALCHEMY_DATABASE_URI = postgre_local_base
+        SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL")
         DEBUG = True
         DEVELOPMENT = True
         
 class ProductionConfig():
         
         SECRET_KEY = 'my_precious'
-        DEBUG = False
-        SQLALCHEMY_DATABASE_URI = 'postgresql:///example'
-        
-        
-        
+        DEBUG = True
+        SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL")
