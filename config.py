@@ -18,8 +18,6 @@ class DevelopmentConfig():
 class ProductionConfig():
         
         SECRET_KEY = 'my_precious'
-        DEBUG = False
-        SQLALCHEMY_DATABASE_URI = 'postgresql:///example'
-        
-        
+        DEBUG = True
+        SQLALCHEMY_DATABASE_URI = 'postgres://username:B1C1SqqBdbOmIlpJarolYBJgYhmnCLR1@dpg-churenu7avj345e84bpg-a/gerente'
         
