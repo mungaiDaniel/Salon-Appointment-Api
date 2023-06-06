@@ -58,24 +58,6 @@ jobs:
           name: Run tests
           # This assumes pytest is installed via the install-package step above
           command: coverage run -m pytest -W ignore
-
-      - checkout
-      - run:
-          name: install dockerize
-
-          command: wget
-               https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz && sudo tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz && rm dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
-
-          environment:
-            DOCKERIZE_VERSION: v0.6.1
-
-      - run:
-          name: wait for db
-
-          command: dockerize -wait tcp://localhost:5432 -timeout 1m
-
-# Invoke jobs via workflows
-# See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
   sample: # This is the name of the workflow, feel free to change it to better match your workflow.
     # Inside the workflow, you define the jobs you want to run.
