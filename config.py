@@ -20,6 +20,3 @@ class ProductionConfig():
         SECRET_KEY = 'my_precious'
         DEBUG = True
         SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL")
-        PRODUCTION = True
-        
-# postgres://username:7g9dB25gyhqv09nvOisRgIjg6Qa8tC1o@dpg-chvfe51mbg5b5peu6vcg-a.oregon-postgres.render.com/salon_online
