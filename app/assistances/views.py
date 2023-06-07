@@ -8,15 +8,12 @@ from app.auth.model import User
 
 assisstance_v1 = Blueprint('assisstance_v1', __name__, url_prefix='/api/v1')
 
-
 @assisstance_v1.route('/employee/<int:user_id>/<int:service_id>', methods=['POST'])
 def add_employee(service_id,user_id):
     session = db.session
+    new_employee = UserServicesControll.create_assistanceServices(service_id=service_id, user_id=user_id, session=session)
+    return new_employee
     
-    return UserServicesControll.create_assistanceServices(service_id=service_id, user_id=user_id, session=session)
-    
-    
-
 @assisstance_v1.route('/employee/<int:user_id>', methods=['GET'])
 def employee_NY_ID(user_id):
     employee = UserServices.query.filter_by(user_id=user_id).all()
