@@ -46,11 +46,14 @@ class UserController:
         return result
 
     @classmethod
-    def promote_user(cls, id):
+    def promote_user(cls, id, session):
 
         user_role = "super_admin"
 
-        admin = User.query.get_or_404(id)
+        admin = User.get_one(cls.model, id, session)
+
+        if admin is None:
+            return 
 
         admin.user_role = user_role
 
@@ -59,11 +62,14 @@ class UserController:
 
         return user_schema.dump(admin), 200
     @classmethod
-    def user_admin(cls, id):
+    def user_admin(cls, id, session):
 
         user_role = "admin"
 
-        admin = User.query.get_or_404(id)
+        admin = User.get_one(cls.model, id, session)
+
+        if admin is None:
+            return
 
         admin.user_role = user_role
 
@@ -86,6 +92,6 @@ class UserController:
     def get_all_users(cls, session):
         users = User.get_all(cls.model, session)
 
-        return users_schema.dump(users)
+        return users_schema.dump(users), 200
         
         
