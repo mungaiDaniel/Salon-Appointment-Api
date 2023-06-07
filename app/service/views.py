@@ -1,5 +1,5 @@
 from app.service.model import Services
-from flask import request, Blueprint
+from flask import request, Blueprint, make_response, jsonify
 from app.database.database import db
 from app.schemas.schemas import service_schema
 from app.service.controllers import ServiceController
@@ -33,12 +33,19 @@ def one_styles(id):
     session = db.session
     
     result = ServiceController.get_service_by_id(id, session=session)
+    if result is None:
+        return make_response(jsonify({
+                "status": 404,
+                "message": "service doesn't exist"
+            }), 404)
     
     return service_schema.dump(result)
 
 @service_v1.route('/stylings/<int:id>', methods=['PUT'])
 @permission(2)
 def update_style(id):
+
+    session = db.session
     
     data = request.get_json()
     
@@ -47,9 +54,15 @@ def update_style(id):
     cost = data['cost']
     duration = data['duration']
     
-    my_style = ServiceController.update(id, style=style, description=description, cost=cost, duration=duration)
+    my_style = ServiceController.update(id, session=session, style=style, description=description, cost=cost, duration=duration)
+
+    if my_style is None:
+        return make_response(jsonify({
+                "status": 404,
+                "message": "service doesn't exist"
+            }), 404)
     
-    return service_schema.dump(my_style), 200
+    return service_schema.dump(my_style)
 
 
     
