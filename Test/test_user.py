@@ -27,6 +27,29 @@ class TestUser(BaseTestCase):
                                     data=json.dumps(new_user), content_type='application/json')
         self.assertEqual(response.status_code, 409)
 
+    def test_get_all_user(self):
+        response = self.client.get('api/v1/users', content_type='application/json')
+        self.assertEqual(response.status_code, 200)
+
+    def test_get_one_user(self):
+        data = {'firstName':'fa-firstname', 'lastName':'la-lastname', 'email':'fa_example@gmail.com', 'password':'123456', 'location' :'uthiru waiyakiway', 'phoneNumber' :'0727980611'}
+        self.client.post( 'api/v1/users', data=json.dumps(data), content_type='application/json' )
+        response = self.client.get('api/v1/users/1', content_type='application/json')
+        self.assertEqual(response.status_code, 200)
+    def test_update_superadmin(self):
+        data = {'firstName':'fa-firstname', 'lastName':'la-lastname', 'email':'fa_example@gmail.com', 'password':'123456', 'location' :'uthiru waiyakiway', 'phoneNumber' :'0727980611'}
+        self.client.post( 'api/v1/users', data=json.dumps(data), content_type='application/json' )
+        response = self.client.get('api/v1/users/1', content_type='application/json')
+        self.assertEqual(response.status_code, 200)
+
+    def test_user_not_found(self):
+        # test cant login a non user
+        response = self.client.post('api/v1/login',
+                                    data=json.dumps(
+                                        {'email': 'wanjiruamungi@gmail.com','password': 'password'}),
+                                    content_type='application/json')
+        self.assertEqual(response.status_code, 404)
+
 class LoginTest(BaseTestCase):
 
     def setUp(self):

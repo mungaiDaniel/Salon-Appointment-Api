@@ -93,17 +93,30 @@ def login():
 
 @user_v1.route('/super_admin/<int:id>', methods=['PUT'])
 def superAdmin(id):
+    session = db.session
 
+    admin = UserController.promote_user(id, session=session)
 
-    admin = UserController.promote_user(id)
+    if admin is None:
+            return make_response(jsonify({
+            "status": 404,
+            "message": "user doesn't exist"
+        }), 404)
 
     return admin
 
 @user_v1.route('/admin/<int:id>', methods=['PUT'])
 def make_assisstance(id):
 
+    session = db.session
 
-    admin = UserController.user_admin(id)
+    admin = UserController.user_admin(id, session=session)
+
+    if admin is None:
+            return make_response(jsonify({
+            "status": 404,
+            "message": "user doesn't exist"
+        }), 404)
 
     return admin
 
