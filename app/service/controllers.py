@@ -26,29 +26,32 @@ class ServiceController:
         
         cls.model.save(service, session=session)
         
-        return service_schema.dump(service)
+        return service_schema.dump(service), 201
     
     @classmethod
     def get_all_services(cls, session):
         service = Services.get_all(cls.model, session)
         
-        return services_schemas.dump(service)
+        return services_schemas.dump(service), 200
     
     @classmethod
     def get_service_by_id(cls, id, session):
         service = Services.get_one(cls.model, id, session)
+
+        if service is None:
+            return
         
-        return service
+        return service 
         
        
     
-    @staticmethod
-    def update(id, style, description, cost, duration):
+    @classmethod
+    def update(cls, id, session, style, description, cost, duration):
         
-        current_style = Services.query.filter_by(id=id).first()
+        current_style = Services.get_one(cls.model, id, session)
         
         if not current_style:
-            return {'message': 'no style found by that id'}
+            return 
         
         current_style.style = style
         current_style.description = description
