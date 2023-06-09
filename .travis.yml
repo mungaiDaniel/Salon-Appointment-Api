@@ -1,0 +1,23 @@
+#Prgramming language used
+language: python
+#Language version
+python:
+  - "3.10.6"
+services:
+  - postgresql
+
+before_script:
+  - psql -c 'create database testsalon;' -U postgres
+
+before_install:
+    - pip install pytest pytest-cov
+    - pip install coveralls
+
+install:
+- pip install -r requirements.txt
+# command to run tests
+script:
+  - pytest
+  - pytest --cov=.
+after_success:
+  - coverage run -m pytest
