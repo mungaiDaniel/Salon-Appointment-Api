@@ -1,0 +1,347 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+      "description": "This is a salon application project whereby users can book for appointments , register and login to an account , admin can apgrade a user to an employee and admin can post new hair salon styles.",
+      "version": "1.0.0",
+      "title": "Salon Gerente",
+      "license": {
+        "name": "MIT",
+        "url": "https://opensource.org/licenses/MIT"
+      }
+    },
+    "tags": [
+        {
+          "name": "Salon API",
+          "description": "Test salon api endpoints"
+        }
+      ],
+      "servers": [
+        {
+        "url": "/"
+        }
+    ],
+    "components": {
+        "schemas": {
+            "Users": {
+                "type": "object",
+                "properties": {
+                    "firstName": {
+                    "type": "string"
+                    },
+                    "lastName": {
+                    "type": "string"
+                    },
+                    "password": {
+                    "type": "string"
+                    },
+                    "email": {
+                    "type": "string"
+                    },
+                    "location": {
+                    "type": "string"
+                    },
+                    "phoneNumber": {
+                    "type": "integer"
+                    }
+                }
+            },
+            "Services": {
+                "type": "object",
+                "properties":{
+                    "style":{
+                        "type":"string"
+                    },
+                    "description":{
+                        "type":"string"
+                    },
+                    "cost":{
+                        "type":"integer"
+                    },
+                    "duration":{
+                        "type":"integer"
+                    }
+                }
+            },
+            "securitySchemes":{
+                "bearerAuth":{
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT"    
+                }
+                
+            },
+            "Id":{
+            "type" : "integer",
+            "properties" : {
+                "name" : {
+                    "type" : "integer"
+                }
+            }
+        },
+            "Login":{
+                "type": "object",
+                "properties": {
+                    "email": {
+                        "type": "string"
+                    },
+                    "password":{
+                        "type": "string"
+                    }
+                }
+            },
+            "update":{
+              "type": "object",
+              "properties" :{
+                "name": {
+                    "type": "string"
+                    },
+                  "description": {
+                    "type": "string"
+                  },
+                  "completed": {
+                    "type": "boolean"
+                  }
+              }
+            }
+        }
+    },
+    "paths": {
+        "/api/v1/users": {
+            "post": {
+            "tags": [
+                "Register user"
+            ],
+            "summary": "Register user",
+            "requestBody": {
+            "description": "sign up a new user to my database",
+            "required": true,
+            "content": {
+                "application/json": {
+                "schema": {
+                    "$ref": "#/components/schemas/Users"
+                    }
+                }
+            }
+            },
+            "responses": {
+                "201": {
+                    "description": "CREATED",
+                    "schema": {
+                    "$ref": "#/components/schemas/Users"
+                    }
+                },
+                "409": {
+                    "description": "CONFLICT",
+                    "schema": {
+                    "$ref": "#/components/schemas/Users"
+                    }
+            }
+            }
+            },
+            "get" :{
+                "tags": [
+                    "Get All users from API"
+                ],
+                "summary": "Get all users",
+               
+                "responses": {
+                "200": {
+                    "description": "OK",
+                    "schema": {
+                    "$ref": "#/components/schemas/Users"
+                    }
+                },
+                "404": {
+                    "description": "NOT FOUND",
+                    "schema": {
+                    "$ref": "#/components/schemas/Users"
+                    }
+            }
+            }
+            }
+        },
+        "/api/v1/users/{id}":{
+  
+            "get" :{
+                "tags": [
+                    "Get one user from API"
+                ],
+                "summary": "Get one user",
+                "parameters": [{
+                  "name": "id",
+                  "in": "path",
+                  "description": "question id to update",
+                  "required": true,
+                  "type": "integer",
+                  "schema" : {
+                      "$ref": "#/components/schemas/Id"
+                  }
+                }],
+               
+                "responses": {
+                "200": {
+                    "description": "OK",
+                    "schema": {
+                    "$ref": "#/components/schemas/Users"
+                    }
+                },
+                "404": {
+                    "description": "NOT FOUND",
+                    "schema": {
+                    "$ref": "#/components/schemas/Users"
+                    }
+            }
+            }
+            }
+        },
+            "/api/v1/login":{
+                "post": {
+                    "tags": [
+                        "Login user"
+                    ],
+                    "summary": "Login user",
+                    "requestBody": {
+                    "description": "login a new user to the application",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Login"
+                            }
+                        }
+                    }
+                    },
+                    "responses": {
+                        "200": {
+                            "description": "CREATED",
+                            "schema": {
+                            "$ref": "#/components/schemas/Login"
+                            }
+                        },
+                        "404": {
+                            "description": "CONFLICT",
+                            "schema": {
+                            "$ref": "#/components/schemas/Login"
+                            }
+                    },
+                    "400": {
+                        "description": "BAD REQUEST",
+                        "schema": {
+                        "$ref": "#/components/schemas/Login"
+                        }
+                }
+                    }
+                }
+            } ,
+            "/api/v1/super_admin/{id}":{
+                "put": {
+                    "tags": [
+                        "Update user to super_admin API"
+                    ],
+                    "parameters": [{
+                        "name": "id",
+                        "in": "path",
+                        "description": "update super_admin",
+                        "required": true,
+                        "type": "integer",
+                        "schema" : {
+                            "$ref": "#/components/schemas/Id"
+                        }
+                    }],
+                    "summary": "Update super_admin",
+                    "requestBody": {
+                    "description": "Update Existing user to super_admin",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/update"
+                            }
+                        }
+                    }
+                    },
+                    "responses": {
+                        "200": {
+                            "description": "OK",
+                            "schema": {
+                            "$ref": "#/components/schemas/Questions"
+                            }
+                        },
+                        "404": {
+                            "description": "NOT FOUND",
+                            "schema": {
+                            "$ref": "#/components/schemas/Users"
+                            }
+                    }
+                    }
+                }
+            },
+            "/api/v1/employees":{
+                "get" :{
+                    "tags": [
+                        "Get All super_admin"
+                    ],
+                    "summary": "Get all super_admin",
+                   
+                    "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                        "$ref": "#/components/schemas/Users"
+                        }
+                    },
+                    "404": {
+                        "description": "NOT FOUND",
+                        "schema": {
+                        "$ref": "#/components/schemas/Users"
+                        }
+                }
+                }
+                }
+            },
+            "/api/v1/stylings": {
+                "post": {
+                "tags": [
+                    "Posts services offered by salon"
+                ],
+                "summary": "Post services",
+                "requestBody": {
+                "description": "Add a new service to my database",
+                "required": true,
+                "content": {
+                    
+                    "application/json": {
+                    "schema": {
+                        "$ref": "#/components/schemas/Services"
+                        }
+                    }
+                }
+                },
+                "responses": {
+                    "201": {
+                        "description": "CREATED",
+                        "schema": {
+                        "$ref": "#/components/schemas/Services"
+                        }
+                    },
+                    "401": {
+                        "description": "UNAUTHORIZED",
+                        "schema": {
+                        "$ref": "#/components/schemas/Services"
+                        }
+                }
+                },
+                "security": {
+                    "bearerAuth": []
+                }
+                }
+            }
+        
+
+
+        }
+    }
+
+
+  
+  
