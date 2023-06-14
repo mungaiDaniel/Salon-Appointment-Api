@@ -26,7 +26,7 @@ def create_app(config_filename):
         }
     )
     JWTManager(app)
-    CORS(app, supports_credentials=True)
+    CORS(app, supports_credentials=True, resources={r"/*": {"origins": "*"}})
     db.init_app(app)
     app.app_context().push()
     app.register_blueprint(user_v1)
