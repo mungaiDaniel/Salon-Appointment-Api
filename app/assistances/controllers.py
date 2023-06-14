@@ -10,10 +10,6 @@ class UserServicesControll:
     @classmethod
     def create_assistanceServices(cls, session, service_id, user_id):
         #validate data
-        user_exist = session.query(exists().where(User.id == user_id)).scalar()
-        
-        if not user_exist:
-            return {'message': 'user not found'}
         
         assistanceServices = cls.model(
             service_id=service_id,
