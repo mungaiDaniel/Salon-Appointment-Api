@@ -23,7 +23,6 @@ class BookingController:
         
         bookings = cls.model(
             date = data.get('date'),
-            time = data.get('time'),
             employee_id = employee_id.id,
             service_id = service_id.id,
             user_id = user_id.id
