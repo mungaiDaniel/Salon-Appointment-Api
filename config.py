@@ -1,6 +1,6 @@
 import os
 
-postgre_local_base = "postgresql://username:7g9dB25gyhqv09nvOisRgIjg6Qa8tC1o@dpg-chvfe51mbg5b5peu6vcg-a.oregon-postgres.render.com/salon_online"
+postgre_local_base = "postgresql://postgres:username@localhost/salons"
     
 class TestingConfig():
         
