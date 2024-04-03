@@ -38,7 +38,7 @@ def create_app(config_filename):
 
     return app
 
-app = create_app('config.DevelopmentConfig')
+app = create_app('config.ProductionConfig')
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000, debug=True)
