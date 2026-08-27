@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: salon_api_web
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_CONFIG=config.ProductionConfig
+      - DATABASE_URI=postgresql://salon_user:salon_password@db:5432/salon_db
+      - SECRET_KEY=prod-secret-key-32-bytes-minimum-length-key!
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  db:
+    image: postgres:15-alpine
+    container_name: salon_api_db
+    restart: always
+    environment:
+      POSTGRES_USER: salon_user
+      POSTGRES_PASSWORD: salon_password
+      POSTGRES_DB: salon_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U salon_user -d salon_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: salon_api_test
+    environment:
+      - FLASK_CONFIG=config.TestingConfig
+      - TEST_DATABASE_URI=sqlite:///:memory:
+      - SECRET_KEY=test-secret-key-32-bytes-minimum-length-key!
+    command: ["python", "-m", "pytest", "-v"]
+
+volumes:
+  postgres_data:

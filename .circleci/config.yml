@@ -1,0 +1,26 @@
+# Simplified CircleCI config — uses sqlite in-memory (no Postgres required).
+# GitHub Actions (.github/workflows/python-app.yml) is the primary CI pipeline.
+version: 2.1
+
+orbs:
+  python: circleci/python@1.5.0
+
+jobs:
+  build-and-test:
+    docker:
+      - image: cimg/python:3.10.2
+    steps:
+      - checkout
+      - python/install-packages:
+          pkg-manager: pip
+      - run:
+          name: Run tests with coverage
+          command: coverage run -m pytest
+      - run:
+          name: Report coverage
+          command: coverage report --fail-under=70
+
+workflows:
+  test:
+    jobs:
+      - build-and-test
