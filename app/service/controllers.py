@@ -1,73 +1,37 @@
-from app.service.model import Services
-from app.schemas.schemas import services_schemas, service_schema
-from app.auth.model import User
+from sqlalchemy import select
+
 from app.database.database import db
-from app.utils.responses import m_return
-import app.utils.responses as resp
-from flask_jwt_extended import get_jwt_identity
+from app.errors import not_found
+from app.service.model import Services
 
 
 class ServiceController:
-    model = Services
+    @staticmethod
+    def create(data: dict, creator_id: int) -> Services:
+        service = Services(**data, user_id=creator_id, created_by=str(creator_id))
+        service.save()
+        return service
 
-    @classmethod
-    def create_service(cls, data, session):
+    @staticmethod
+    def list_all() -> list[Services]:
+        return list(db.session.execute(select(Services).order_by(Services.id)).scalars())
 
-        email = get_jwt_identity()
-        user_id = User.query.filter_by(email=email).first()
-        service = cls.model(
-            style=data.get("style"),
-            description=data.get("description"),
-            cost=data.get("cost"),
-            duration=data.get("duration"),
-            user_id=user_id.id,
-            created_by=user_id.id,
-        )
-
-        cls.model.save(service, session=session)
-
-        return service_schema.dump(service), 201
-
-    @classmethod
-    def get_all_services(cls, session):
-        service = Services.get_all(cls.model, session)
-
-        return services_schemas.dump(service), 200
-
-    @classmethod
-    def get_service_by_id(cls, id, session):
-        service = Services.get_one(cls.model, id, session)
-
+    @staticmethod
+    def get(service_id: int) -> Services:
+        service = db.session.get(Services, service_id)
         if service is None:
-            return
-
+            raise not_found("Service not found.", code="service_not_found")
         return service
 
     @classmethod
-    def update(cls, id, session, style, description, cost, duration):
-
-        current_style = Services.get_one(cls.model, id, session)
-
-        if not current_style:
-            return
-
-        current_style.style = style
-        current_style.description = description
-        current_style.cost = cost
-        current_style.duration = duration
-
+    def update(cls, service_id: int, data: dict) -> Services:
+        service = cls.get(service_id)
+        for field, value in data.items():
+            setattr(service, field, value)
         db.session.commit()
-
-        return current_style
+        return service
 
     @classmethod
-    def delete(cls, service):
-
-        db.session.delete(service)
+    def delete(cls, service_id: int) -> None:
+        db.session.delete(cls.get(service_id))
         db.session.commit()
-
-        return m_return(
-            http_code=resp.DELETED_SUCCESS["http_code"],
-            message=resp.DELETED_SUCCESS["message"],
-            code=resp.DELETED_SUCCESS["code"],
-        )

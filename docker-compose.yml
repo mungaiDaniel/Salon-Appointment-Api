@@ -1,55 +1,33 @@
-version: '3.8'
-
+# Run the API + PostgreSQL:  cp .env.example .env  (fill in SECRET_KEY and POSTGRES_PASSWORD)
+#                            docker compose up --build
 services:
   web:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: salon_api_web
-    restart: always
+    build: .
     ports:
       - "5000:5000"
     environment:
-      - FLASK_CONFIG=config.ProductionConfig
-      - DATABASE_URI=postgresql://salon_user:salon_password@db:5432/salon_db
-      - SECRET_KEY=prod-secret-key-32-bytes-minimum-length-key!
+      FLASK_CONFIG: config.ProductionConfig
+      SECRET_KEY: ${SECRET_KEY:?set SECRET_KEY in .env}
+      DATABASE_URI: postgresql://${POSTGRES_USER:-salon_user}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@db:5432/${POSTGRES_DB:-salon_db}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
     depends_on:
       db:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
+    restart: unless-stopped
 
   db:
-    image: postgres:15-alpine
-    container_name: salon_api_db
-    restart: always
+    image: postgres:16-alpine
     environment:
-      POSTGRES_USER: salon_user
-      POSTGRES_PASSWORD: salon_password
-      POSTGRES_DB: salon_db
-    ports:
-      - "5432:5432"
+      POSTGRES_USER: ${POSTGRES_USER:-salon_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-salon_db}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U salon_user -d salon_db"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-salon_user} -d ${POSTGRES_DB:-salon_db}"]
       interval: 5s
       timeout: 5s
-      retries: 5
-
-  test:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: salon_api_test
-    environment:
-      - FLASK_CONFIG=config.TestingConfig
-      - TEST_DATABASE_URI=sqlite:///:memory:
-      - SECRET_KEY=test-secret-key-32-bytes-minimum-length-key!
-    command: ["python", "-m", "pytest", "-v"]
+      retries: 10
 
 volumes:
   postgres_data:

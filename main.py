@@ -1,68 +1,100 @@
+"""Flask application factory."""
+
 import os
-from datetime import timedelta
+
+from dotenv import load_dotenv
 from flask import Flask, jsonify
-from flask_jwt_extended import JWTManager
-from flask_cors import CORS
 from flask_swagger_ui import get_swaggerui_blueprint
+from sqlalchemy import select, text
 
-from sqlalchemy import text
-from app.logging_config import setup_logging
-from app.database.database import db
+from app.assistances.views import assistance_v1
+from app.auth.model import User
 from app.auth.views import user_v1
-from app.assistances.views import assisstance_v1
-from app.service.views import service_v1
 from app.bookings.views import booking_v1
+from app.cli import register_cli
+from app.database.database import db
+from app.errors import error_response, register_error_handlers
+from app.extensions import cors, jwt, limiter, migrate
+from app.logging_config import setup_logging
+from app.service.views import service_v1
+
+SWAGGER_URL = "/swagger"
+SWAGGER_SPEC_URL = "/static/swagger.json"
 
 
-def create_app(config_filename=None):
+def create_app(config_object=None) -> Flask:
+    """Build and configure the app.
+
+    ``config_object`` may be a dotted path or class; it defaults to ``$FLASK_CONFIG`` and then
+    ``config.DevelopmentConfig``. A local ``.env`` file is loaded first (never committed).
+    """
+    load_dotenv()
+    config_object = config_object or os.environ.get("FLASK_CONFIG", "config.DevelopmentConfig")
+
     app = Flask(__name__)
-
-    if config_filename is None:
-        config_filename = os.environ.get("FLASK_CONFIG", "config.DevelopmentConfig")
-
-    if isinstance(config_filename, str):
-        app.config.from_object(config_filename)
-    else:
-        app.config.from_object(config_filename)
+    app.config.from_object(config_object)
+    _resolve(config_object).init_app(app)
 
     setup_logging(app)
 
-    app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=1)
-    app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=1)
+    db.init_app(app)
+    migrate.init_app(app, db)
+    jwt.init_app(app)
+    limiter.init_app(app)
+    cors.init_app(app, origins=app.config["CORS_ORIGINS"], supports_credentials=True)
 
-    SWAGGER_URL = "/swagger"
-    API_URL = "/static/swagger.json"
-    SWAGGER_BLUEPRINT = get_swaggerui_blueprint(
-        SWAGGER_URL, API_URL, config={"app_name": "Salon Gerente"}
+    _register_jwt_callbacks()
+    register_error_handlers(app)
+    register_cli(app)
+
+    for blueprint in (user_v1, assistance_v1, service_v1, booking_v1):
+        app.register_blueprint(blueprint)
+    app.register_blueprint(
+        get_swaggerui_blueprint(SWAGGER_URL, SWAGGER_SPEC_URL, config={"app_name": "Salon API"}),
+        url_prefix=SWAGGER_URL,
     )
 
-    JWTManager(app)
-    CORS(app, supports_credentials=True, resources={r"/*": {"origins": "*"}})
-    db.init_app(app)
-
-    @app.route("/health", methods=["GET"])
-    @app.route("/api/v1/health", methods=["GET"])
+    @app.get("/health")
+    @app.get("/api/v1/health")
+    @limiter.exempt
     def health_check():
         try:
             db.session.execute(text("SELECT 1"))
-            db_status = "connected"
-        except Exception as e:
-            app.logger.error(f"Database health check failed: {e}")
-            db_status = "disconnected"
-            return jsonify({"status": "error", "db": db_status, "message": str(e)}), 500
-
-        return jsonify({"status": "ok", "db": db_status, "service": "salon-appointment-api"}), 200
-
-    app.register_blueprint(user_v1)
-    app.register_blueprint(assisstance_v1)
-    app.register_blueprint(service_v1)
-    app.register_blueprint(booking_v1)
-    app.register_blueprint(SWAGGER_BLUEPRINT, url_prefix=SWAGGER_URL)
+        except Exception:
+            app.logger.exception("Database health check failed")
+            return jsonify({"status": "error", "db": "disconnected"}), 503
+        return jsonify({"status": "ok", "db": "connected", "service": "salon-appointment-api"})
 
     return app
 
 
-app = create_app(os.environ.get("FLASK_CONFIG", "config.DevelopmentConfig"))
+def _resolve(config_object):
+    if isinstance(config_object, str):
+        from werkzeug.utils import import_string
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+        return import_string(config_object)
+    return config_object
+
+
+def _register_jwt_callbacks() -> None:
+    """Load the User for each token and return JSON (not HTML) for every auth failure."""
+
+    @jwt.user_lookup_loader
+    def load_user(_header, payload):
+        return db.session.execute(select(User).filter_by(email=payload["sub"])).scalar_one_or_none()
+
+    @jwt.user_lookup_error_loader
+    def user_gone(_header, _payload):
+        return error_response(401, "user_not_found", "The account for this token no longer exists.")
+
+    @jwt.unauthorized_loader
+    def missing_token(reason):
+        return error_response(401, "authorization_required", reason)
+
+    @jwt.invalid_token_loader
+    def invalid_token(reason):
+        return error_response(401, "invalid_token", reason)
+
+    @jwt.expired_token_loader
+    def expired_token(_header, _payload):
+        return error_response(401, "token_expired", "The token has expired.")

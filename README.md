@@ -1,215 +1,140 @@
 # Salon Appointment API
 
-[![Python Version](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue)](https://www.python.org/)
-[![Framework](https://img.shields.io/badge/framework-Flask%202.x-lightgrey)](https://flask.palletsprojects.com/)
-[![Database](https://img.shields.io/badge/database-PostgreSQL%20%7C%20SQLite-blue)](https://www.postgresql.org/)
-[![Tests](https://img.shields.io/badge/tests-54%20passed%20%2F%2093%25%20coverage-brightgreen)](#running-automated-tests)
-[![Code Style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+A role-based REST API for salon service catalogues, staff and appointment booking, built with Flask, SQLAlchemy and JWT, with a React front end that also runs in a no-backend demo mode.
 
-A production-ready RESTful API for salon management and appointment scheduling. Built with **Flask**, **Flask-SQLAlchemy**, **Flask-JWT-Extended**, and **Swagger UI** for documentation. The application provides role-based access control (Customers, Employees, Admins, Super Admins), salon style catalog management, service assignment, and appointment bookings.
+- **Live Demo:** _add your deployed frontend URL here_ (runs on mock data, see [note](#about-the-live-demo))
+- **API docs:** interactive Swagger UI at `/swagger` when the API is running
+- **Frontend repo:** https://github.com/mungaiDaniel/Salon-Appointment-UI
 
----
+![Screenshot or GIF placeholder](docs/screenshot.png)
 
-## Key Features
+## Features
 
-- **Authentication & Role-Based Access Control**:
-  - Secure password hashing (`passlib` / Werkzeug).
-  - JWT Access Token & Refresh Token authorization.
-  - Role hierarchy: `user`, `admin`, `super_admin`.
-- **Salon Service Catalog**:
-  - CRUD operations for salon styling services (name, description, cost, duration).
-  - Role-protected modifications (admin/super-admin permissions).
-- **Appointment Booking System**:
-  - Book styling appointments with assigned employees/stylists.
-  - Query user bookings and appointment schedules.
-- **Employee & Assistance Management**:
-  - Link employees with specific salon services.
-  - Promote users to employee/admin roles.
-- **Monitoring & API Specs**:
-  - Health check endpoints (`/health` and `/api/v1/health`) with DB connectivity verification.
-  - Structured JSON logging.
-  - Interactive Swagger UI documentation at `/swagger`.
-- **Fully Self-Contained & Testable**:
-  - 54 automated unit/integration tests with 93% code coverage.
-  - Coverage gate enforced at ≥70% in CI.
-  - Code formatting enforced with `black` and linting with `flake8`.
-  - Complete Docker containerization (`Dockerfile` and `docker-compose.yml`).
+- **JWT authentication** with access and refresh tokens; roles `user < admin < super_admin` checked on every request against the database, so promotions and deletions take effect immediately
+- **Secure by default:** authorization fails closed, scrypt password hashing (legacy md5-crypt hashes are upgraded transparently at login), no password hashes in any response, rate-limited login and registration, CORS limited to configured origins
+- **Input validation** with Marshmallow, returning `422` with per-field details
+- **One consistent error format** with stable machine-readable codes (`{"status", "code", "message", "details"}`) for every failure, including 404/405/500
+- **Booking integrity:** customers only see their own bookings, and an employee cannot be double-booked for the same slot (`409`, enforced by a unique constraint as well as an up-front check)
+- **Service catalogue and staff assignment** (which employee performs which service)
+- **Operational basics:** health endpoint with DB check, structured JSON logging, Alembic migrations, a `flask create-admin` command, Docker and Compose setup
+- **Quality gates:** 84 pytest tests at 99% coverage (CI fails under 90%), black, flake8, and `pip-audit` in CI
 
----
+## Tech stack
 
-## Project Structure
+**Backend:** Python 3.12+, Flask 3, Flask-SQLAlchemy / SQLAlchemy 2, Flask-JWT-Extended, Marshmallow 4, Flask-Migrate (Alembic), Flask-Limiter, Flask-CORS, Swagger UI, PostgreSQL (SQLite for dev and tests), Gunicorn, Docker
 
-```
-.
-├── app/
-│   ├── assistances/     # Employee assistance assignment views & controllers
-│   ├── auth/            # Authentication, registration & user controllers
-│   ├── bookings/        # Appointment booking controllers & views
-│   ├── database/        # Database initialization instance
-│   ├── logging_config.py # Structured JSON logging configuration
-│   ├── schemas/         # Marshmallow serialization schemas
-│   ├── service/         # Hair salon styling services catalog
-│   └── utils/           # Decorators, JWT helpers & custom HTTP responses
-├── tests/               # Pytest suite (conftest fixtures, unit & integration tests)
-├── Test/                # unittest-based test suite
-├── static/              # Static assets & Swagger specification
-├── base_model.py        # Abstract SQLAlchemy base model
-├── config.py            # Development, Testing, and Production configurations
-├── main.py              # Application entrypoint & Flask factory
-├── Dockerfile           # Container build
-├── docker-compose.yml   # Orchestration (Web API + PostgreSQL DB)
-├── .env.example         # Environment variable template
-├── pyproject.toml       # Black formatter configuration
-├── .flake8              # Flake8 linter configuration
-├── pytest.ini           # Pytest runner configuration
-├── requirements.txt     # Pinned Python package dependencies
-├── requirements.in      # Unpinned dependency source
-└── README.md            # Repository documentation
+**Frontend:** React 18, MUI 5, Bootstrap 5, axios, React Router 6, Jest and Testing Library
+
+## Architecture
+
+```mermaid
+flowchart LR
+    UI["React SPA<br/>(demo mode: in-memory mock API)"] -- "HTTPS + JWT" --> API
+    subgraph API["Flask API (create_app factory)"]
+        V["Blueprints / views<br/>(auth, service, assistances, bookings)"] --> C["Controllers<br/>business rules"]
+        C --> M["SQLAlchemy models"]
+        V -. validates .-> S["Marshmallow schemas"]
+        V -. guards .-> D["role_required<br/>(JWT + DB role)"]
+        E["Central error handler"]
+    end
+    M --> DB[("PostgreSQL / SQLite")]
 ```
 
----
+```
+app/
+  auth/ service/ assistances/ bookings/   # each: model.py, controllers.py, views.py
+  schemas/        # Marshmallow input + output schemas
+  utils/          # role_required decorator
+  errors.py       # ApiError + central JSON error handlers
+  extensions.py   # db, jwt, limiter, cors, migrate
+  cli.py          # flask create-admin
+config.py         # Development / Production / Testing configs (env-driven)
+main.py           # application factory; wsgi.py is the gunicorn entrypoint
+migrations/       # Alembic
+tests/            # pytest suite
+```
 
-## Quickstart Guide
+Views stay thin (parse, validate, serialise); controllers hold the business rules and raise `ApiError`s that the central handler turns into responses.
 
-### Prerequisites
+## API endpoints
 
-- Python 3.10+ **or** Docker
+Base path `/api/v1`. Roles are cumulative (`admin` includes `user`; `super_admin` includes both). Full schemas are in Swagger UI.
 
-### 1. Local Setup
+| Method | Route | Description | Auth |
+|---|---|---|---|
+| POST | `/users` | Register a customer account | No |
+| POST | `/login` | Log in, returns access and refresh tokens | No |
+| POST | `/refresh` | New access token from a refresh token | Refresh token |
+| GET | `/users` | List all users | admin |
+| GET | `/users/{id}` | Get a profile (own, or any as admin) | Yes |
+| PUT | `/admin/{id}` | Promote a user to admin | super_admin |
+| PUT | `/super_admin/{id}` | Promote a user to super_admin | super_admin |
+| GET | `/employees` | Staff list (contact details only for admin callers) | No |
+| GET | `/stylings` | List services | No |
+| GET | `/stylings/{id}` | Get a service | No |
+| POST | `/stylings` | Create a service | admin |
+| PUT | `/stylings/{id}` | Replace a service | admin |
+| DELETE | `/stylings/{id}` | Delete a service | admin |
+| POST | `/employee/{user_id}/{service_id}` | Assign a service to an employee | admin |
+| GET | `/employee/{user_id}` | Service assignments for an employee | No |
+| GET | `/employee_service/{employee_id}` | Full service records an employee performs | No |
+| POST | `/booking` | Book an appointment (as the authenticated user) | Yes |
+| GET | `/booking` | List bookings (all for admins, own for customers) | Yes |
+| GET | `/booking/{id}` | Get a booking (owner or admin) | Yes |
+| GET | `/health` (also `/api/v1/health`) | Liveness and database check | No |
+
+## Local setup
+
+### Backend
 
 ```bash
-# Clone the repository
-git clone <repository-url>
+git clone https://github.com/mungaiDaniel/Salon-Appointment-Api.git
 cd Salon-Appointment-Api
+python -m venv .venv && source .venv/bin/activate      # Windows: .venv\Scripts\activate
+pip install -r requirements-dev.txt
 
-# Create and activate virtual environment
-python -m venv venv
-
-# Linux / macOS
-source venv/bin/activate
-
-# Windows PowerShell
-.\venv\Scripts\Activate.ps1
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Set required environment variables
 cp .env.example .env
-# Edit .env and set SECRET_KEY and DATABASE_URI
+# set SECRET_KEY in .env (>= 32 chars):
+python -c "import secrets; print(secrets.token_hex(32))"
 
-# Run the application
-python main.py
+flask db upgrade                                 # creates the SQLite dev DB (or your DATABASE_URI)
+flask create-admin you@example.com               # prompts for a password; creates the first super admin
+flask run                                        # http://localhost:5000  (Swagger UI at /swagger)
 ```
 
-The server starts at `http://localhost:5000`. Swagger documentation is at `http://localhost:5000/swagger`.
+The API will not start without a `SECRET_KEY` of at least 32 characters. Environment variables are documented in [`.env.example`](.env.example): `DATABASE_URI`, `CORS_ORIGINS`, JWT lifetimes, rate limits.
 
----
+**PostgreSQL:** set `DATABASE_URI=postgresql://user:password@localhost:5432/salon_db` and run `flask db upgrade`.
 
-### 2. Running Automated Tests
+**Docker:** `cp .env.example .env`, fill in `SECRET_KEY` and `POSTGRES_PASSWORD`, then `docker compose up --build`. The container applies migrations on start.
+
+### Frontend
 
 ```bash
-# Run all tests
-python -m pytest
-
-# Run tests with coverage report
-coverage run -m pytest
-coverage report --fail-under=70
+git clone https://github.com/mungaiDaniel/Salon-Appointment-UI.git
+cd Salon-Appointment-UI
+npm install --legacy-peer-deps
+cp .env.example .env           # REACT_APP_API_URL=http://localhost:5000/api/v1
+npm start                      # http://localhost:3000
 ```
 
-Expected output:
-```text
-54 passed, 93% coverage
-```
+Add `http://localhost:3000` to `CORS_ORIGINS` on the API (it is the default). To try the UI without any backend, run `npm run start:demo`.
 
----
-
-### 3. Code Formatting & Linting
+### Running the tests
 
 ```bash
-# Check formatting (no changes)
-black --check .
-
-# Auto-format
-black .
-
-# Lint
-flake8 .
+pytest                  # 84 tests; fails if coverage drops below 90%
+black --check . && flake8
+pip-audit -r requirements.txt
 ```
 
----
+## About the live demo
 
-### 4. Docker Containerization
+The hosted demo is the **frontend only**, deployed with `REACT_APP_DEMO_MODE=true`. Every API call is answered by an in-memory mock with clearly fake sample data, so changes are not saved and reset on reload. The real Flask backend in this repository is not hosted for the demo; run it locally using the steps above to use the real API.
 
-Run the API and PostgreSQL database in containerized isolation:
+## Author
 
-```bash
-# Copy environment template
-cp .env.example .env
+**Daniel Mungai** — backend developer (Python / Flask)
 
-# Build and start services
-docker compose up --build
-
-# Run tests inside container
-docker compose run --rm web pytest
-
-# Run tests with coverage inside container
-docker compose run --rm web sh -c "coverage run -m pytest && coverage report"
-```
-
----
-
-## API Endpoints Reference
-
-| Endpoint | Method | Auth Required | Description |
-| :--- | :---: | :---: | :--- |
-| `/health` | `GET` | No | Health check with DB connectivity |
-| `/api/v1/health` | `GET` | No | Health check (API versioned) |
-| `/api/v1/users` | `POST` | No | Register a new user |
-| `/api/v1/login` | `POST` | No | Authenticate user & receive JWT tokens |
-| `/api/v1/users` | `GET` | No | List all registered users |
-| `/api/v1/users/<id>` | `GET` | No | Get specific user details |
-| `/api/v1/employees` | `GET` | No | List salon employees |
-| `/api/v1/admin/<id>` | `PUT` | No | Promote user to admin |
-| `/api/v1/super_admin/<id>` | `PUT` | No | Promote user to super admin |
-| `/api/v1/stylings` | `GET` | No | List available styling services |
-| `/api/v1/stylings/<id>` | `GET` | No | Get styling service details |
-| `/api/v1/stylings` | `POST` | Bearer Token | Create new styling service |
-| `/api/v1/stylings/<id>` | `PUT` | Bearer Token | Update styling service |
-| `/api/v1/stylings/<id>` | `DELETE` | Bearer Token | Delete styling service |
-| `/api/v1/booking` | `POST` | Bearer Token | Book a salon appointment |
-| `/api/v1/booking` | `GET` | No | List all bookings |
-| `/api/v1/booking/<id>` | `GET` | No | Get booking details |
-| `/api/v1/employee/<uid>/<sid>` | `POST` | No | Assign employee to service |
-| `/swagger` | `GET` | No | Interactive Swagger UI |
-
----
-
-## Environment Variables
-
-| Variable | Default | Description |
-| :--- | :--- | :--- |
-| `FLASK_CONFIG` | `config.DevelopmentConfig` | Configuration class |
-| `DATABASE_URI` | `sqlite:///salon_dev.db` | Database connection string |
-| `TEST_DATABASE_URI` | `sqlite:///:memory:` | Test database URI |
-| `SECRET_KEY` | *(required)* | JWT & session signing key |
-| `PORT` | `5000` | HTTP port |
-
-See [`.env.example`](.env.example) for a complete template.
-
----
-
-## CI/CD
-
-GitHub Actions runs on every push/PR to `main`/`master`:
-
-1. **Install** — `pip install -r requirements.txt`
-2. **Format check** — `black --check .`
-3. **Lint** — `flake8 .`
-4. **Test + Coverage** — `coverage run -m pytest && coverage report --fail-under=70`
-
----
-
-## License
-
-MIT License.
+- GitHub: [github.com/mungaiDaniel](https://github.com/mungaiDaniel)
+- LinkedIn: [linkedin.com/in/daniel-mungai-7a52451b8](https://linkedin.com/in/daniel-mungai-7a52451b8)

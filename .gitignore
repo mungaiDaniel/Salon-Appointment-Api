@@ -52,3 +52,5 @@ coverage.xml
 .vscode/
 *.swp
 *.swo
+
+instance/

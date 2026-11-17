@@ -1,26 +1,30 @@
-from flask import Blueprint
-from app.schemas.schemas import employees_schemas
-from app.database.database import db
-from app.assistances.model import UserServices
-from app.assistances.controllers import UserServicesControll
-from app.auth.model import User
+from flask import Blueprint, jsonify
+from flask_jwt_extended import current_user
 
-assisstance_v1 = Blueprint("assisstance_v1", __name__, url_prefix="/api/v1")
+from app.assistances.controllers import UserServicesController
+from app.schemas.schemas import (
+    employee_service_schema,
+    employee_services_schema,
+    services_schema,
+)
+from app.utils.decorators import role_required
 
-
-@assisstance_v1.route("/employee/<int:user_id>/<int:service_id>", methods=["POST"])
-def add_employee(service_id, user_id):
-    session = db.session
-    new_employee = UserServicesControll.create_assistanceServices(
-        service_id=service_id, user_id=user_id, session=session
-    )
-    return new_employee
+assistance_v1 = Blueprint("assistance_v1", __name__, url_prefix="/api/v1")
 
 
-@assisstance_v1.route("/employee/<int:user_id>", methods=["GET"])
-def employee_NY_ID(user_id):
-    employee = UserServices.query.filter_by(user_id=user_id).all()
-    session = db.session
-    for c, i in session.query(User, UserServices).filter(User.id == UserServices.user_id).all():
-        print(f"result {c.id} {c.firstName}")
-    return employees_schemas.dump(employee)
+@assistance_v1.route("/employee/<int:user_id>/<int:service_id>", methods=["POST"])
+@role_required("admin")
+def add_employee(user_id, service_id):
+    link = UserServicesController.assign(user_id, service_id, created_by=str(current_user.id))
+    return jsonify(employee_service_schema.dump(link)), 201
+
+
+@assistance_v1.route("/employee/<int:user_id>", methods=["GET"])
+def employee_services(user_id):
+    return jsonify(employee_services_schema.dump(UserServicesController.for_employee(user_id)))
+
+
+@assistance_v1.route("/employee_service/<int:employee_id>", methods=["GET"])
+def services_for_employee(employee_id):
+    """The full service records an employee can perform (used by the booking page)."""
+    return jsonify(services_schema.dump(UserServicesController.services_for_employee(employee_id)))

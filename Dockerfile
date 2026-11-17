@@ -1,36 +1,25 @@
-# Production-ready Dockerfile for Salon Appointment API
-FROM python:3.11-slim as base
+FROM python:3.12-slim
 
-# Set environment variables
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    PIP_NO_CACHE_DIR=off \
-    PIP_DISABLE_PIP_VERSION_CHECK=on \
+    PIP_NO_CACHE_DIR=1 \
     PORT=5000
 
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    libpq-dev \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy requirements and install python dependencies
 COPY requirements.txt .
-RUN pip install --upgrade pip && \
-    pip install -r requirements.txt gunicorn
+RUN pip install --upgrade pip && pip install -r requirements.txt
 
-# Copy application source code
 COPY . .
 
-# Expose server port
+# Run as an unprivileged user
+RUN useradd --system --create-home app && chown -R app /app
+USER app
+
 EXPOSE 5000
 
-# Health check instruction
-HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:5000/health || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD python -c "import urllib.request,os; urllib.request.urlopen(f'http://localhost:{os.environ[\"PORT\"]}/health')" || exit 1
 
-# Start gunicorn server
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "4", "main:app"]
+# Apply migrations, then serve. (Run `flask create-admin` once to create the first admin.)
+CMD ["sh", "-c", "flask --app main db upgrade && gunicorn wsgi:app --bind 0.0.0.0:${PORT} --workers 3"]
