@@ -1,347 +1,1275 @@
 {
-    "openapi": "3.0.0",
-    "info": {
-      "description": "This is a salon application project whereby users can book for appointments , register and login to an account , admin can apgrade a user to an employee and admin can post new hair salon styles.",
-      "version": "1.0.0",
-      "title": "Salon Gerente",
-      "license": {
-        "name": "MIT",
-        "url": "https://opensource.org/licenses/MIT"
-      }
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Salon Appointment API",
+    "version": "2.0.0",
+    "description": "Salon service catalogue, staff and appointment booking. JWT bearer auth; roles: user < admin < super_admin."
+  },
+  "tags": [
+    {
+      "name": "Auth"
     },
-    "tags": [
-        {
-          "name": "Salon API",
-          "description": "Test salon api endpoints"
-        }
-      ],
-      "servers": [
-        {
-        "url": "/"
-        }
-    ],
-    "components": {
-        "schemas": {
-            "Users": {
-                "type": "object",
-                "properties": {
-                    "firstName": {
-                    "type": "string"
-                    },
-                    "lastName": {
-                    "type": "string"
-                    },
-                    "password": {
-                    "type": "string"
-                    },
-                    "email": {
-                    "type": "string"
-                    },
-                    "location": {
-                    "type": "string"
-                    },
-                    "phoneNumber": {
-                    "type": "integer"
-                    }
+    {
+      "name": "Users"
+    },
+    {
+      "name": "Services"
+    },
+    {
+      "name": "Employees"
+    },
+    {
+      "name": "Bookings"
+    },
+    {
+      "name": "Ops"
+    }
+  ],
+  "paths": {
+    "/api/v1/users": {
+      "post": {
+        "summary": "Register a customer account",
+        "tags": [
+          "Auth"
+        ],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
                 }
-            },
-            "Services": {
-                "type": "object",
-                "properties":{
-                    "style":{
-                        "type":"string"
-                    },
-                    "description":{
-                        "type":"string"
-                    },
-                    "cost":{
-                        "type":"integer"
-                    },
-                    "duration":{
-                        "type":"integer"
-                    }
-                }
-            },
-            "securitySchemes":{
-                "bearerAuth":{
-                "type": "http",
-                "scheme": "bearer",
-                "bearerFormat": "JWT"    
-                }
-                
-            },
-            "Id":{
-            "type" : "integer",
-            "properties" : {
-                "name" : {
-                    "type" : "integer"
-                }
-            }
-        },
-            "Login":{
-                "type": "object",
-                "properties": {
-                    "email": {
-                        "type": "string"
-                    },
-                    "password":{
-                        "type": "string"
-                    }
-                }
-            },
-            "update":{
-              "type": "object",
-              "properties" :{
-                "name": {
-                    "type": "string"
-                    },
-                  "description": {
-                    "type": "string"
-                  },
-                  "completed": {
-                    "type": "boolean"
-                  }
               }
             }
-        }
-    },
-    "paths": {
-        "/api/v1/users": {
-            "post": {
-            "tags": [
-                "Register user"
-            ],
-            "summary": "Register user",
-            "requestBody": {
-            "description": "sign up a new user to my database",
-            "required": true,
+          },
+          "409": {
+            "description": "Email already registered",
             "content": {
-                "application/json": {
+              "application/json": {
                 "schema": {
-                    "$ref": "#/components/schemas/Users"
-                    }
+                  "$ref": "#/components/schemas/Error"
                 }
+              }
             }
-            },
-            "responses": {
-                "201": {
-                    "description": "CREATED",
-                    "schema": {
-                    "$ref": "#/components/schemas/Users"
-                    }
-                },
-                "409": {
-                    "description": "CONFLICT",
-                    "schema": {
-                    "$ref": "#/components/schemas/Users"
-                    }
+          },
+          "422": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
             }
-            }
-            },
-            "get" :{
-                "tags": [
-                    "Get All users from API"
-                ],
-                "summary": "Get all users",
-               
-                "responses": {
-                "200": {
-                    "description": "OK",
-                    "schema": {
-                    "$ref": "#/components/schemas/Users"
-                    }
-                },
-                "404": {
-                    "description": "NOT FOUND",
-                    "schema": {
-                    "$ref": "#/components/schemas/Users"
-                    }
-            }
-            }
-            }
+          }
         },
-        "/api/v1/users/{id}":{
-  
-            "get" :{
-                "tags": [
-                    "Get one user from API"
-                ],
-                "summary": "Get one user",
-                "parameters": [{
-                  "name": "id",
-                  "in": "path",
-                  "description": "question id to update",
-                  "required": true,
-                  "type": "integer",
-                  "schema" : {
-                      "$ref": "#/components/schemas/Id"
-                  }
-                }],
-               
-                "responses": {
-                "200": {
-                    "description": "OK",
-                    "schema": {
-                    "$ref": "#/components/schemas/Users"
-                    }
-                },
-                "404": {
-                    "description": "NOT FOUND",
-                    "schema": {
-                    "$ref": "#/components/schemas/Users"
-                    }
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Register"
+              }
             }
-            }
-            }
-        },
-            "/api/v1/login":{
-                "post": {
-                    "tags": [
-                        "Login user"
-                    ],
-                    "summary": "Login user",
-                    "requestBody": {
-                    "description": "login a new user to the application",
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                        "schema": {
-                            "$ref": "#/components/schemas/Login"
-                            }
-                        }
-                    }
-                    },
-                    "responses": {
-                        "200": {
-                            "description": "CREATED",
-                            "schema": {
-                            "$ref": "#/components/schemas/Login"
-                            }
-                        },
-                        "404": {
-                            "description": "CONFLICT",
-                            "schema": {
-                            "$ref": "#/components/schemas/Login"
-                            }
-                    },
-                    "400": {
-                        "description": "BAD REQUEST",
-                        "schema": {
-                        "$ref": "#/components/schemas/Login"
-                        }
-                }
-                    }
-                }
-            } ,
-            "/api/v1/super_admin/{id}":{
-                "put": {
-                    "tags": [
-                        "Update user to super_admin API"
-                    ],
-                    "parameters": [{
-                        "name": "id",
-                        "in": "path",
-                        "description": "update super_admin",
-                        "required": true,
-                        "type": "integer",
-                        "schema" : {
-                            "$ref": "#/components/schemas/Id"
-                        }
-                    }],
-                    "summary": "Update super_admin",
-                    "requestBody": {
-                    "description": "Update Existing user to super_admin",
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/update"
-                            }
-                        }
-                    }
-                    },
-                    "responses": {
-                        "200": {
-                            "description": "OK",
-                            "schema": {
-                            "$ref": "#/components/schemas/Questions"
-                            }
-                        },
-                        "404": {
-                            "description": "NOT FOUND",
-                            "schema": {
-                            "$ref": "#/components/schemas/Users"
-                            }
-                    }
-                    }
-                }
-            },
-            "/api/v1/employees":{
-                "get" :{
-                    "tags": [
-                        "Get All super_admin"
-                    ],
-                    "summary": "Get all super_admin",
-                   
-                    "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                        "$ref": "#/components/schemas/Users"
-                        }
-                    },
-                    "404": {
-                        "description": "NOT FOUND",
-                        "schema": {
-                        "$ref": "#/components/schemas/Users"
-                        }
-                }
-                }
-                }
-            },
-            "/api/v1/stylings": {
-                "post": {
-                "tags": [
-                    "Posts services offered by salon"
-                ],
-                "summary": "Post services",
-                "requestBody": {
-                "description": "Add a new service to my database",
-                "required": true,
-                "content": {
-                    
-                    "application/json": {
-                    "schema": {
-                        "$ref": "#/components/schemas/Services"
-                        }
-                    }
-                }
-                },
-                "responses": {
-                    "201": {
-                        "description": "CREATED",
-                        "schema": {
-                        "$ref": "#/components/schemas/Services"
-                        }
-                    },
-                    "401": {
-                        "description": "UNAUTHORIZED",
-                        "schema": {
-                        "$ref": "#/components/schemas/Services"
-                        }
-                }
-                },
-                "security": {
-                    "bearerAuth": []
-                }
-                }
-            }
-        
-
-
+          }
         }
+      },
+      "get": {
+        "summary": "List all users",
+        "tags": [
+          "Users"
+        ],
+        "responses": {
+          "200": {
+            "description": "All users",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/User"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Requires the 'admin' role or higher",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/users/{id}": {
+      "get": {
+        "summary": "Get a user (own profile, or any profile for admins)",
+        "tags": [
+          "Users"
+        ],
+        "responses": {
+          "200": {
+            "description": "The user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      }
+    },
+    "/api/v1/login": {
+      "post": {
+        "summary": "Log in",
+        "tags": [
+          "Auth"
+        ],
+        "responses": {
+          "200": {
+            "description": "Tokens",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid email or password",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Login"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/refresh": {
+      "post": {
+        "summary": "Exchange a refresh token for a new access token",
+        "tags": [
+          "Auth"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "New access token"
+          },
+          "401": {
+            "description": "Invalid refresh token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/{id}": {
+      "put": {
+        "summary": "Promote a user to admin",
+        "tags": [
+          "Users"
+        ],
+        "responses": {
+          "200": {
+            "description": "Updated user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Requires the 'super_admin' role or higher",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      }
+    },
+    "/api/v1/super_admin/{id}": {
+      "put": {
+        "summary": "Promote a user to super_admin",
+        "tags": [
+          "Users"
+        ],
+        "responses": {
+          "200": {
+            "description": "Updated user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Requires the 'super_admin' role or higher",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      }
+    },
+    "/api/v1/employees": {
+      "get": {
+        "summary": "Public staff list (contact details only included for admin callers)",
+        "tags": [
+          "Users"
+        ],
+        "responses": {
+          "200": {
+            "description": "Staff",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/User"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/stylings": {
+      "get": {
+        "summary": "List salon services",
+        "tags": [
+          "Services"
+        ],
+        "responses": {
+          "200": {
+            "description": "Services",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Service"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a service",
+        "tags": [
+          "Services"
+        ],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Service"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Requires the 'admin' role or higher",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServiceInput"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/stylings/{id}": {
+      "get": {
+        "summary": "Get a service",
+        "tags": [
+          "Services"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The service",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Service"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Replace a service",
+        "tags": [
+          "Services"
+        ],
+        "responses": {
+          "200": {
+            "description": "Updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Service"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Requires the 'admin' role or higher",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ServiceInput"
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      },
+      "delete": {
+        "summary": "Delete a service",
+        "tags": [
+          "Services"
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted"
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Requires the 'admin' role or higher",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      }
+    },
+    "/api/v1/employee/{user_id}/{service_id}": {
+      "post": {
+        "summary": "Assign a service to an employee",
+        "tags": [
+          "Employees"
+        ],
+        "responses": {
+          "201": {
+            "description": "Assigned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmployeeService"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User or service not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Already assigned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Requires the 'admin' role or higher",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "service_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      }
+    },
+    "/api/v1/employee/{user_id}": {
+      "get": {
+        "summary": "Service assignments for an employee",
+        "tags": [
+          "Employees"
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Assignments",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EmployeeService"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/employee_service/{employee_id}": {
+      "get": {
+        "summary": "Full service records an employee performs",
+        "tags": [
+          "Employees"
+        ],
+        "parameters": [
+          {
+            "name": "employee_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Services",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Service"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/booking": {
+      "post": {
+        "summary": "Book an appointment (as the authenticated user)",
+        "tags": [
+          "Bookings"
+        ],
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Booking"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Service or employee not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Employee already booked at that time",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BookingInput"
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "List bookings (all for admins, own for customers)",
+        "tags": [
+          "Bookings"
+        ],
+        "responses": {
+          "200": {
+            "description": "Bookings",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Booking"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/booking/{id}": {
+      "get": {
+        "summary": "Get a booking (owner or admin)",
+        "tags": [
+          "Bookings"
+        ],
+        "responses": {
+          "200": {
+            "description": "The booking",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Booking"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not your booking",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid or expired token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      }
+    },
+    "/health": {
+      "get": {
+        "summary": "Liveness and database check",
+        "tags": [
+          "Ops"
+        ],
+        "responses": {
+          "200": {
+            "description": "Healthy"
+          },
+          "503": {
+            "description": "Database unreachable"
+          }
+        }
+      }
     }
-
-
-  
-  
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "integer"
+          },
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "details": {
+            "type": "object"
+          }
+        },
+        "example": {
+          "status": 404,
+          "code": "not_found",
+          "message": "Resource not found."
+        }
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "phoneNumber": {
+            "type": "string"
+          },
+          "location": {
+            "type": "string"
+          },
+          "user_role": {
+            "type": "string",
+            "enum": [
+              "user",
+              "admin",
+              "super_admin"
+            ]
+          },
+          "created": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "Register": {
+        "type": "object",
+        "properties": {
+          "firstName": {
+            "type": "string"
+          },
+          "lastName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8
+          },
+          "phoneNumber": {
+            "type": "string",
+            "example": "+254 712 345678"
+          },
+          "location": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "firstName",
+          "lastName",
+          "email",
+          "password"
+        ]
+      },
+      "Login": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "LoginResult": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "value": {
+            "type": "object",
+            "properties": {
+              "access_token": {
+                "type": "string"
+              },
+              "refresh_token": {
+                "type": "string"
+              },
+              "user_role": {
+                "type": "string"
+              },
+              "user": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "Service": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "style": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "cost": {
+            "type": "number"
+          },
+          "duration": {
+            "type": "integer",
+            "description": "minutes"
+          },
+          "user_id": {
+            "type": "integer"
+          }
+        }
+      },
+      "ServiceInput": {
+        "type": "object",
+        "properties": {
+          "style": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "cost": {
+            "type": "number",
+            "minimum": 0
+          },
+          "duration": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "style",
+          "cost",
+          "duration"
+        ]
+      },
+      "EmployeeService": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "user_id": {
+            "type": "integer"
+          },
+          "service_id": {
+            "type": "integer"
+          }
+        }
+      },
+      "Booking": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "date": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "employee_id": {
+            "type": "integer"
+          },
+          "user_id": {
+            "type": "integer"
+          },
+          "service_id": {
+            "type": "integer"
+          }
+        }
+      },
+      "BookingInput": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2030-09-01T14:00:00"
+          },
+          "service_id": {
+            "type": "integer"
+          },
+          "employee_id": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "date",
+          "service_id"
+        ]
+      }
+    }
+  }
+}

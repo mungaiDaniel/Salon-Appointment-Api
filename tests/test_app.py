@@ -3,6 +3,8 @@
 import pytest
 from flask import Flask
 
+from app.auth.model import User
+from app.database.database import db
 from config import Config, ProductionConfig
 from main import create_app
 
@@ -99,3 +101,25 @@ def test_factory_builds_app_from_environment(monkeypatch, tmp_path):
     monkeypatch.setenv("FLASK_CONFIG", "config.DevelopmentConfig")
     built = create_app()
     assert built.config["JWT_SECRET_KEY"] == "k" * 40
+
+
+def test_create_admin_cli_creates_then_promotes(app):
+    runner = app.test_cli_runner()
+    result = runner.invoke(
+        args=["create-admin", "Boss@Example.com", "--password", "LongEnough1", "--role", "admin"]
+    )
+    assert result.exit_code == 0, result.output
+    user = db.session.execute(db.select(User).filter_by(email="boss@example.com")).scalar_one()
+    assert user.user_role == "admin" and user.verify_password("LongEnough1")
+
+    result = runner.invoke(args=["create-admin", "boss@example.com", "--password", "LongEnough1"])
+    assert "Promoted" in result.output
+    db.session.refresh(user)
+    assert user.user_role == "super_admin"
+
+
+def test_create_admin_cli_rejects_short_password(app):
+    result = app.test_cli_runner().invoke(
+        args=["create-admin", "a@example.com", "--password", "short"]
+    )
+    assert result.exit_code != 0

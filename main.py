@@ -11,6 +11,7 @@ from app.assistances.views import assistance_v1
 from app.auth.model import User
 from app.auth.views import user_v1
 from app.bookings.views import booking_v1
+from app.cli import register_cli
 from app.database.database import db
 from app.errors import error_response, register_error_handlers
 from app.extensions import cors, jwt, limiter, migrate
@@ -44,6 +45,7 @@ def create_app(config_object=None) -> Flask:
 
     _register_jwt_callbacks()
     register_error_handlers(app)
+    register_cli(app)
 
     for blueprint in (user_v1, assistance_v1, service_v1, booking_v1):
         app.register_blueprint(blueprint)
