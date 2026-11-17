@@ -1,54 +1,45 @@
-import datetime
-from sqlalchemy import Column, Integer, String, DateTime, Enum
+from sqlalchemy import Column, Enum, Integer, String
+from werkzeug.security import check_password_hash, generate_password_hash
+
 from app.database.database import db
-from base_model import Base
-from flask_jwt_extended import create_access_token
-from passlib.handlers.md5_crypt import md5_crypt
+from app.database.mixins import AuditMixin
+
+ROLES = ("user", "admin", "super_admin")
+# Higher number == more privileged.
+ROLE_LEVEL = {role: level for level, role in enumerate(ROLES)}
+
+_LEGACY_PREFIX = "$1$"  # md5-crypt hashes written by the original implementation
 
 
-class Admin(str, Enum):
-    super_admin = "super_admin"
-    admin = "admin"
-    user = "user"
-
-
-class User(Base, db.Model):
+class User(AuditMixin, db.Model):
     __tablename__ = "user"
 
     id = Column(Integer, primary_key=True)
-    firstName = Column(String(100))
-    lastName = db.Column(String(100))
-    email = Column(String(100), unique=True)
-    password = Column(String(1000))
-    phoneNumber = Column(Integer)
+    firstName = Column(String(100), nullable=False)
+    lastName = Column(String(100), nullable=False)
+    email = Column(String(255), unique=True, nullable=False, index=True)
+    password = Column(String(1000), nullable=False)
+    phoneNumber = Column(String(20))
     location = Column(String(100))
-    user_role = Column(
-        String, Enum("super_admin", "admin", "user", name="user_roles"), default="user"
-    )
-    created = Column(DateTime, default=datetime.datetime.now())
-
-    def generate_auth_token(self, permission_level):
-
-        if permission_level == 2:
-
-            token = create_access_token(identity=self.email, additional_claims={"admin": 2})
-
-            return token
-        elif permission_level == 1:
-
-            token = create_access_token(identity=self.email, additional_claims={"admin": 1})
-
-            return token
-
-        return create_access_token(identity=self.email, additional_claims={"admin": 0})
+    user_role = Column(Enum(*ROLES, name="user_roles"), nullable=False, default="user")
 
     @staticmethod
-    def generate_password_hash(password):
+    def generate_password_hash(password: str) -> str:
+        """Hash a password with Werkzeug's default (scrypt)."""
+        return generate_password_hash(password)
 
-        h = md5_crypt.hash(password)
+    def verify_password(self, password: str) -> bool:
+        """Check ``password``; transparently upgrade legacy md5-crypt hashes on success."""
+        if self.password.startswith(_LEGACY_PREFIX):
+            from passlib.hash import md5_crypt
 
-        return h
+            if not md5_crypt.verify(password, self.password):
+                return False
+            self.password = self.generate_password_hash(password)
+            db.session.commit()
+            return True
+        return check_password_hash(self.password, password)
 
-    def verify_password_hash(self, password):
-
-        return md5_crypt.verify(password, self.password)
+    @property
+    def role_level(self) -> int:
+        return ROLE_LEVEL.get(self.user_role, 0)

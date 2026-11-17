@@ -1,146 +1,70 @@
-from typing import Optional
+from flask_jwt_extended import create_access_token, create_refresh_token
+from sqlalchemy import select
 
 from app.auth.model import User
-from app.schemas.schemas import user_schema, users_schema
 from app.database.database import db
-from flask import jsonify, make_response
-from flask_jwt_extended import create_refresh_token
-from exceptions import AuthenticationError
-import app.utils.responses as resp
-
-
-# Role-to-permission-level mapping used by token generation.
-_ROLE_PERMISSION: dict[str, int] = {
-    "user": 0,
-    "admin": 1,
-    "super_admin": 2,
-}
+from app.errors import conflict, not_found, unauthorized
 
 
 class UserController:
-    model = User
+    @staticmethod
+    def authenticate(email: str, password: str) -> dict:
+        """Verify credentials and return the token payload.
 
-    @classmethod
-    def authenticate(cls, email: str, password: str) -> dict:
-        """Authenticate a user by email/password and return token payload.
-
-        Returns:
-            dict with keys: access_token, refresh_token, user_role, user.
-
-        Raises:
-            AuthenticationError: on missing user, bad password, or unknown role.
+        Unknown email and wrong password deliberately produce the *same* error so the
+        endpoint cannot be used to discover which emails are registered.
         """
-        user = User.query.filter_by(email=email).first()
-
-        if user is None:
-            raise AuthenticationError(
-                http_code=resp.USER_DOES_NOT_EXIST["http_code"],
-                message=resp.USER_DOES_NOT_EXIST["message"],
-                code=resp.USER_DOES_NOT_EXIST["code"],
-            )
-
-        if not user.verify_password_hash(password):
-            raise AuthenticationError(
-                http_code=resp.CREDENTIALS_ERROR_999["http_code"],
-                message=resp.CREDENTIALS_ERROR_999["message"],
-                code=resp.CREDENTIALS_ERROR_999["code"],
-            )
-
-        permission_level = _ROLE_PERMISSION.get(user.user_role)
-        if permission_level is None:
-            raise AuthenticationError(
-                http_code=resp.PERMISSION_DENIED["http_code"],
-                message=resp.PERMISSION_DENIED["message"],
-                code=resp.PERMISSION_DENIED["code"],
-            )
-
-        access_token: str = user.generate_auth_token(permission_level)
-        refresh_token: str = create_refresh_token(identity={"email": email})
+        user = db.session.execute(select(User).filter_by(email=email)).scalar_one_or_none()
+        if user is None or not user.verify_password(password):
+            raise unauthorized("Invalid email or password.", code="invalid_credentials")
 
         return {
-            "access_token": access_token,
-            "refresh_token": refresh_token,
+            "access_token": create_access_token(identity=user.email),
+            "refresh_token": create_refresh_token(identity=user.email),
             "user_role": user.user_role,
             "user": user.firstName,
         }
 
-    @classmethod
-    def create_user(cls, data: dict, session) -> tuple:
-
-        password = User.generate_password_hash(data.get("password"))
-
-        user = cls.model(
-            firstName=data.get("firstName"),
-            lastName=data.get("lastName"),
-            email=data.get("email"),
-            password=password,
-            user_role="user",
-            phoneNumber=data.get("phoneNumber"),
-            location=data.get("location"),
-            created_by="SYSTEM",
-        )
-
-        if session.query(User.query.filter(User.email == user.email).exists()).scalar():
-
-            return make_response(
-                jsonify({"status": 409, "message": "user with that email already exists"}), 409
-            )
-
-        cls.model.save(user, session=session)
-
-        return user_schema.dump(user), 201
+    @staticmethod
+    def refresh(user: User) -> dict:
+        return {"access_token": create_access_token(identity=user.email)}
 
     @staticmethod
-    def get_admin() -> list:
-        user_role = "super_admin"
-        employe = User.query.filter_by(user_role=user_role).all()
-        result = users_schema.dump(employe)
+    def create_user(data: dict) -> User:
+        if db.session.execute(select(User.id).filter_by(email=data["email"])).first():
+            raise conflict("A user with that email already exists.", code="email_taken")
 
-        return result
+        user = User(
+            firstName=data["firstName"],
+            lastName=data["lastName"],
+            email=data["email"],
+            password=User.generate_password_hash(data["password"]),
+            phoneNumber=data["phoneNumber"],
+            location=data["location"],
+            user_role="user",  # never taken from client input
+        )
+        user.save()
+        return user
 
-    @classmethod
-    def promote_user(cls, id: int, session) -> Optional[tuple]:
+    @staticmethod
+    def list_users() -> list[User]:
+        return list(db.session.execute(select(User).order_by(User.id)).scalars())
 
-        user_role = "super_admin"
+    @staticmethod
+    def list_staff() -> list[User]:
+        query = select(User).where(User.user_role.in_(["admin", "super_admin"])).order_by(User.id)
+        return list(db.session.execute(query).scalars())
 
-        admin = User.get_one(cls.model, id, session)
-
-        if admin is None:
-            return
-
-        admin.user_role = user_role
-
-        db.session.commit()
-
-        return user_schema.dump(admin), 200
-
-    @classmethod
-    def user_admin(cls, id: int, session) -> Optional[tuple]:
-
-        user_role = "admin"
-
-        admin = User.get_one(cls.model, id, session)
-
-        if admin is None:
-            return
-
-        admin.user_role = user_role
-
-        db.session.commit()
-
-        return user_schema.dump(admin), 200
-
-    @classmethod
-    def get_user_by_id(cls, id: int, session) -> Optional[User]:
-        user = User.get_one(cls.model, id, session)
-
+    @staticmethod
+    def get_user(user_id: int) -> User:
+        user = db.session.get(User, user_id)
         if user is None:
-
-            return
+            raise not_found("User not found.", code="user_not_found")
         return user
 
     @classmethod
-    def get_all_users(cls, session) -> tuple:
-        users = User.get_all(cls.model, session)
-
-        return users_schema.dump(users), 200
+    def set_role(cls, user_id: int, role: str) -> User:
+        user = cls.get_user(user_id)
+        user.user_role = role
+        db.session.commit()
+        return user

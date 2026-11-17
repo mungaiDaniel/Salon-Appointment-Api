@@ -1,38 +1,32 @@
+"""Authorization decorators. Both **fail closed**: no valid token means no access."""
+
 import functools
-import logging
-from flask_jwt_extended import verify_jwt_in_request, get_jwt
-import app.utils.responses as error
-from flask import request
+
+from flask_jwt_extended import current_user, jwt_required
+
+from app.auth.model import ROLE_LEVEL
+from app.errors import forbidden
 
 
-def permission(arg):
-    def check_permissions(f):
+def role_required(minimum_role: str):
+    """Require a valid JWT whose user holds ``minimum_role`` or higher.
 
-        @functools.wraps(f)
-        def decorated(*args, **kwargs):
+    The role is read from the database on every request (see ``user_lookup_loader``), so
+    promotions/demotions take effect immediately and deleted users are locked out.
+    """
+    required_level = ROLE_LEVEL[minimum_role]
 
-            auth = request.authorization
+    def decorator(view):
+        @functools.wraps(view)
+        @jwt_required()
+        def wrapper(*args, **kwargs):
+            if current_user.role_level < required_level:
+                raise forbidden(
+                    f"This action requires the '{minimum_role}' role or higher.",
+                    code="insufficient_role",
+                )
+            return view(*args, **kwargs)
 
-            if auth is None and "Authorization" in request.headers:
-                try:
+        return wrapper
 
-                    verify_jwt_in_request()
-                    claims = get_jwt()
-
-                    if claims["admin"] < arg:
-
-                        return error.NOT_ADMIN
-                except ValueError:
-
-                    return error.HEADER_NOT_FOUND
-
-                except Exception as why:
-                    logging.error(why)
-
-                    return error.INVALID_INPUT_422
-
-            return f(*args, **kwargs)
-
-        return decorated
-
-    return check_permissions
+    return decorator
